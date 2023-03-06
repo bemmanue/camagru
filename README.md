@@ -1,6 +1,6 @@
 # Camagru
 
->Welcome to Camagru! This is Instagram-like web application allowing users to create and share photos.
+Welcome to Camagru! This is Instagram-like web application allowing users to create and share photos.
 
 ---
 
