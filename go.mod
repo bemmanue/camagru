@@ -1,1 +1,1 @@
-module https://github.com/bemmanue/camagru
+module github.com/bemmanue/camagru
