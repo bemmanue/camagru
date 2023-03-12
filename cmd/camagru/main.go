@@ -1,10 +1,14 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
+	_ "github.com/lib/pq"
 	"log"
 	"net/http"
 )
+
+var db *sql.DB
 
 func index(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "./web/templates/index.html")
@@ -32,6 +36,18 @@ func signUp(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprintf(w, "ParseForm() err: %v", err)
 			return
 		}
+
+		username := r.Form.Get("login")
+		email := r.Form.Get("email")
+		password := r.Form.Get("password")
+
+		query := fmt.Sprintf("insert into users(username, email, password) values ('%s', '%s', '%s');",
+			username, email, password)
+		_, err := db.Exec(query)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
 		http.Redirect(w, r, "/confirm", http.StatusSeeOther)
 	}
 }
@@ -53,6 +69,9 @@ func confirm(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	db = initDB()
+	defer db.Close()
+
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/", index)
@@ -64,4 +83,31 @@ func main() {
 	mux.HandleFunc("/confirm", confirm)
 
 	log.Fatalln(http.ListenAndServe("localhost:8888", mux))
+}
+
+const (
+	host   = "localhost"
+	port   = 5432
+	user   = "postgres"
+	dbname = "camagru"
+)
+
+func initDB() *sql.DB {
+	driver := "postgres"
+	data := fmt.Sprintf("host=%s port=%d user=%s dbname=%s sslmode=disable",
+		host, port, user, dbname)
+
+	var err error
+
+	db, err = sql.Open(driver, data)
+	if err != nil {
+		panic(err)
+	}
+
+	err = db.Ping()
+	if err != nil {
+		panic(err)
+	}
+
+	return db
 }
