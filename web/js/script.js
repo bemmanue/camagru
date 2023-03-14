@@ -1,10 +1,21 @@
 $(document).ready(function() {
+
+    jQuery.validator.addMethod("login", function(value, element) {
+        return this.optional(element) || /^[a-zA-Z\d]+$/.test(value);
+    }, "Only alphanumeric characters");
+
+    jQuery.validator.addMethod("password", function(value, element) {
+        return this.optional(element) || /^[ -~]+$/.test(value);
+    }, "Only printable characters");
+
+
     $("form").validate({
         rules: {
             login: {
                 required: true,
-                minlength: 5,
-                maxlength:30
+                login: true,
+                minlength: 6,
+                maxlength: 30,
             },
             email: {
                 required: true,
@@ -12,7 +23,8 @@ $(document).ready(function() {
             },
             password: {
                 required: true,
-                minlength: 5,
+                password: true,
+                minlength: 6,
                 maxlength: 30
             },
             password_confirm: {

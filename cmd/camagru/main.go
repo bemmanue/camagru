@@ -3,7 +3,10 @@ package main
 import (
 	"database/sql"
 	"errors"
+	"flag"
 	"fmt"
+	"github.com/BurntSushi/toml"
+	"github.com/bemmanue/camagru/internal/app/camagru"
 	_ "github.com/lib/pq"
 	"log"
 	"net/http"
@@ -29,9 +32,9 @@ func signIn(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func validateRegistryData(login, email, password string) (bool, error) {
+func validateRegistryData(login, email, password, passwordConfirm string) (bool, error) {
 	// check login
-	if len(login) < 5 {
+	if len(login) < 6 {
 		return false, errors.New("invalid login")
 	}
 
@@ -42,8 +45,13 @@ func validateRegistryData(login, email, password string) (bool, error) {
 	}
 
 	// check password
-	if len(password) < 5 {
+	if len(password) < 6 {
 		return false, errors.New("invalid password")
+	}
+
+	// check password confirm
+	if passwordConfirm != password {
+		return false, errors.New("wrong password confirm")
 	}
 
 	return true, nil
@@ -62,8 +70,9 @@ func signUp(w http.ResponseWriter, r *http.Request) {
 		login := r.Form.Get("login")
 		email := r.Form.Get("email")
 		password := r.Form.Get("password")
+		passwordConfirm := r.Form.Get("password_confirm")
 
-		_, err := validateRegistryData(login, email, password)
+		_, err := validateRegistryData(login, email, password, passwordConfirm)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
@@ -97,25 +106,30 @@ func confirm(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "./web/templates/confirm.html")
 }
 
+var (
+	configPath string
+)
+
+func init() {
+	flag.StringVar(&configPath, "config-path", "config/camagru.toml", "path to config file")
+}
+
 func main() {
-	db = initDB()
-	defer db.Close()
+	flag.Parse()
 
-	mux := http.NewServeMux()
+	config := camagru.NewConfig()
+	_, err := toml.DecodeFile(configPath, config)
+	if err != nil {
+		log.Fatalln(err)
+	}
 
-	fs := http.FileServer(http.Dir("web"))
-	handler := http.StripPrefix("/web/", fs)
-	mux.Handle("/web/", handler)
+	server := camagru.New(config)
+	if err := server.Start(); err != nil {
+		log.Fatalln(err)
+	}
 
-	mux.HandleFunc("/", index)
-	mux.HandleFunc("/sign_in", signIn)
-	mux.HandleFunc("/sign_up", signUp)
-	mux.HandleFunc("/profile", profile)
-	mux.HandleFunc("/feed", feed)
-	mux.HandleFunc("/settings", settings)
-	mux.HandleFunc("/confirm", confirm)
-
-	log.Fatalln(http.ListenAndServe("localhost:8888", mux))
+	//db = initDB()
+	//defer db.Close()
 }
 
 const (
