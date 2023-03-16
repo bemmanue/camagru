@@ -1,6 +1,10 @@
-package store
+package sqlstore
 
-import "github.com/bemmanue/camagru/internal/model"
+import (
+	"database/sql"
+	"github.com/bemmanue/camagru/internal/model"
+	"github.com/bemmanue/camagru/internal/store"
+)
 
 // UserRepository ...
 type UserRepository struct {
@@ -8,13 +12,13 @@ type UserRepository struct {
 }
 
 // Create ...
-func (r *UserRepository) Create(u *model.User) (*model.User, error) {
+func (r *UserRepository) Create(u *model.User) error {
 	if err := u.Validate(); err != nil {
-		return nil, err
+		return err
 	}
 
 	if err := u.BeforeCreate(); err != nil {
-		return nil, err
+		return err
 	}
 
 	if err := r.store.db.QueryRow(
@@ -23,10 +27,10 @@ func (r *UserRepository) Create(u *model.User) (*model.User, error) {
 		u.Email,
 		u.EncryptedPassword,
 	).Scan(&u.ID); err != nil {
-		return nil, err
+		return err
 	}
 
-	return u, nil
+	return nil
 }
 
 // FindByUsername ...
@@ -41,6 +45,10 @@ func (r *UserRepository) FindByUsername(username string) (*model.User, error) {
 		&u.Email,
 		&u.EncryptedPassword,
 	); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, store.ErrRecordNotFound
+		}
+
 		return nil, err
 	}
 	return u, nil
@@ -58,6 +66,10 @@ func (r *UserRepository) FindByEmail(email string) (*model.User, error) {
 		&u.Email,
 		&u.EncryptedPassword,
 	); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, store.ErrRecordNotFound
+		}
+
 		return nil, err
 	}
 	return u, nil

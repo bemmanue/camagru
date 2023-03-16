@@ -47,7 +47,13 @@ $(document).ready(function() {
                 "password" : $('#password').val()}
             ),
             dataType: "json",
-            contentType : "application/json"
+            contentType : "application/json",
+            success: () => {
+                location.href = "/confirm"
+            },
+            error: () => {
+                location.href = "/sign_up"
+            }
         });
     });
 });
