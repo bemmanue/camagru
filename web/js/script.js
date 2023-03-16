@@ -1,6 +1,8 @@
+const form = $("#form");
+
 $(document).ready(function() {
 
-    jQuery.validator.addMethod("login", function(value, element) {
+    jQuery.validator.addMethod("username", function(value, element) {
         return this.optional(element) || /^[a-zA-Z\d]+$/.test(value);
     }, "Only alphanumeric characters");
 
@@ -8,12 +10,11 @@ $(document).ready(function() {
         return this.optional(element) || /^[ -~]+$/.test(value);
     }, "Only printable characters");
 
-
     $("form").validate({
         rules: {
-            login: {
+            username: {
                 required: true,
-                login: true,
+                username: true,
                 minlength: 6,
                 maxlength: 30,
             },
@@ -33,4 +34,23 @@ $(document).ready(function() {
             }
         }
     })
+
+    $(document).on('submit', form, function(e){
+        e.preventDefault();
+
+        $.ajax({
+            type: "POST",
+            url: "/sign_up",
+            data: JSON.stringify({
+                "username" : $('#username').val(),
+                "email" : $('#email').val(),
+                "password" : $('#password').val()}
+            ),
+            dataType: "json",
+            contentType : "application/json"
+        });
+    });
 });
+
+
+
