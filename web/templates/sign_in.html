@@ -2,17 +2,19 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <script src="/web/js/jquery.js"></script>
+    <script src="/web/js/sign_in.js"></script>
     <title>Camagru</title>
 </head>
 <body>
-<form action="/sign_in" method="POST">
-    <label for="username">Логин</label>
+<form id="form">
+    <label for="username">Имя пользователя</label>
     <input id="username" name="username" type="text">
 
     <label for="password">Пароль</label>
     <input id="password" name="password" type="password">
 
-    <button type="submit">Войти</button>
+    <button type="submit" class="button">Войти</button>
 </form>
 </body>
 </html>

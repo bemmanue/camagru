@@ -3,7 +3,6 @@ package camagru
 import (
 	"database/sql"
 	"github.com/bemmanue/camagru/internal/store/sqlstore"
-	"net/http"
 )
 
 func Start(config *Config) error {
@@ -16,7 +15,7 @@ func Start(config *Config) error {
 	store := sqlstore.New(db)
 	srv := newServer(store)
 
-	return http.ListenAndServe(config.BindAddr, srv)
+	return srv.router.Run(config.BindAddr)
 }
 
 func newDB(databaseURL string) (*sql.DB, error) {

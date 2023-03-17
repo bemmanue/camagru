@@ -37,6 +37,11 @@ func TestServer_HandleIndex(t *testing.T) {
 			},
 			expectedCode: http.StatusUnprocessableEntity,
 		},
+		{
+			name:         "invalid",
+			payload:      "invalid",
+			expectedCode: http.StatusBadRequest,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -94,7 +99,7 @@ func TestServer_HandleSessionsCreate(t *testing.T) {
 			rec := httptest.NewRecorder()
 			b := &bytes.Buffer{}
 			json.NewEncoder(b).Encode(tc.payload)
-			req, _ := http.NewRequest(http.MethodPost, "/sessions", b)
+			req, _ := http.NewRequest(http.MethodPost, "/sign_in", b)
 			s.ServeHTTP(rec, req)
 			assert.Equal(t, tc.expectedCode, rec.Code)
 		})

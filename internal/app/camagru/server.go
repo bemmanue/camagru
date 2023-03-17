@@ -1,12 +1,10 @@
 package camagru
 
 import (
-	"encoding/json"
 	"errors"
 	"github.com/bemmanue/camagru/internal/model"
 	"github.com/bemmanue/camagru/internal/store"
-	"github.com/sirupsen/logrus"
-	"log"
+	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
@@ -15,16 +13,14 @@ var (
 )
 
 type server struct {
-	router *http.ServeMux
-	logger *logrus.Logger
+	router *gin.Engine
 	store  store.Store
 }
 
 // newServer ...
 func newServer(store store.Store) *server {
 	s := &server{
-		router: http.NewServeMux(),
-		logger: logrus.New(),
+		router: gin.Default(),
 		store:  store,
 	}
 
@@ -41,115 +37,81 @@ func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // configureRouter ...
 func (s *server) configureRouter() {
 
-	fs := http.FileServer(http.Dir("web/"))
-	handler := http.StripPrefix("/web/", fs)
-	s.router.Handle("/web/", handler)
+	s.router.Static("/web", "./web")
 
-	s.router.HandleFunc("/", s.handleIndex())
-	s.router.HandleFunc("/sign_up", s.handleSignUp())
-	s.router.HandleFunc("/confirm", s.handleConfirm())
-	s.router.HandleFunc("/sign_in", s.handleSignIn())
+	s.router.GET("/", s.getIndex)
+	s.router.GET("/sign_in", s.getSignIn)
+	s.router.GET("/sign_up", s.getSignUp)
+	s.router.GET("/profile", s.getProfile)
+
+	s.router.POST("/sign_in", s.postSignIn)
+	s.router.POST("/sign_up", s.postSignUp)
 }
 
-func (s *server) handleIndex() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "./web/templates/index.html")
+func (s *server) getIndex(c *gin.Context) {
+	c.File("./web/templates/index.html")
+}
+
+func (s *server) getSignIn(c *gin.Context) {
+	c.File("./web/templates/sign_in.html")
+}
+
+func (s *server) getSignUp(c *gin.Context) {
+	c.File("./web/templates/sign_up.html")
+}
+
+func (s *server) postSignIn(c *gin.Context) {
+	type request struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
 	}
+
+	var form request
+
+	err := c.BindJSON(&form)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	u, err := s.store.User().FindByUsername(form.Username)
+	if err != nil || !u.ComparePassword(form.Password) {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": errIncorrectEmailOrPassword})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"username": form.Username, "password": form.Password})
 }
 
-func (s *server) handleSignUp() http.HandlerFunc {
+func (s *server) postSignUp(c *gin.Context) {
 	type request struct {
 		Username string `json:"username"`
 		Email    string `json:"email"`
 		Password string `json:"password"`
 	}
 
-	return func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			http.ServeFile(w, r, "./web/templates/sign_up.html")
-		case http.MethodPost:
-			req := &request{}
-			if err := json.NewDecoder(r.Body).Decode(req); err != nil {
-				s.error(w, r, http.StatusBadRequest, err)
-				return
-			}
+	var form request
 
-			u := &model.User{
-				Username: req.Username,
-				Email:    req.Email,
-				Password: req.Password,
-			}
-
-			if err := s.store.User().Create(u); err != nil {
-				log.Println(err)
-				s.error(w, r, http.StatusUnprocessableEntity, err)
-				return
-			}
-
-			u.Sanitize()
-			s.respond(w, r, http.StatusCreated, u)
-		}
-	}
-}
-
-func (s *server) handleSignIn() http.HandlerFunc {
-	type request struct {
-		Username string `json:"username"`
-		Email    string `json:"email"`
-		Password string `json:"password"`
+	err := c.BindJSON(&form)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
-	return func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			http.ServeFile(w, r, "./web/templates/sign_in.html")
-		case http.MethodPost:
-			req := &request{}
-			if err := json.NewDecoder(r.Body).Decode(req); err != nil {
-				s.error(w, r, http.StatusBadRequest, err)
-				return
-			}
-
-			u, err := s.store.User().FindByUsername(req.Username)
-			if err != nil || !u.ComparePassword(req.Password) {
-				log.Println(err, req.Password)
-				s.error(w, r, http.StatusUnauthorized, errIncorrectEmailOrPassword)
-				return
-			}
-
-			s.respond(w, r, http.StatusOK, nil)
-			//http.Redirect(w, r, "/profile", http.StatusFound)
-		}
+	u := &model.User{
+		Username: form.Username,
+		Email:    form.Email,
+		Password: form.Password,
 	}
-}
 
-func (s *server) error(w http.ResponseWriter, r *http.Request, code int, err error) {
-	s.respond(w, r, code, map[string]string{"error": err.Error()})
-}
-
-func (s *server) respond(w http.ResponseWriter, r *http.Request, code int, data interface{}) {
-	w.WriteHeader(code)
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	if data != nil {
-		json.NewEncoder(w).Encode(data)
+	if err := s.store.User().Create(u); err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err})
+		return
 	}
+
+	c.JSON(http.StatusCreated, gin.H{"username": form.Username, "email": form.Email, "password": form.Password})
 }
 
-func (s *server) handleConfirm() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "./web/templates/confirm.html")
-	}
+func (s *server) getProfile(c *gin.Context) {
+	c.File("./web/templates/profile.html")
 }
-
-//	func profile(w http.ResponseWriter, r *http.Request) {
-//		http.ServeFile(w, r, "./web/templates/profile.html")
-//	}
-//
-//	func feed(w http.ResponseWriter, r *http.Request) {
-//		http.ServeFile(w, r, "./web/templates/feed.html")
-//	}
-//
-//	func settings(w http.ResponseWriter, r *http.Request) {
-//		http.ServeFile(w, r, "./web/templates/settings.html")
-//	}
