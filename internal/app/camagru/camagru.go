@@ -3,6 +3,7 @@ package camagru
 import (
 	"database/sql"
 	"github.com/bemmanue/camagru/internal/store/sqlstore"
+	"github.com/gin-contrib/sessions/cookie"
 )
 
 func Start(config *Config) error {
@@ -13,7 +14,8 @@ func Start(config *Config) error {
 
 	defer db.Close()
 	store := sqlstore.New(db)
-	srv := newServer(store)
+	sessionsStore := cookie.NewStore([]byte("secret"))
+	srv := newServer(store, sessionsStore)
 
 	return srv.router.Run(config.BindAddr)
 }

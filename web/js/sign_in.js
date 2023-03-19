@@ -4,7 +4,6 @@ $(document).ready(function() {
 
     $(document).on('submit', form, function(e){
         e.preventDefault();
-
         $.ajax({
             type: "POST",
             url: "/sign_in",
@@ -14,12 +13,12 @@ $(document).ready(function() {
             ),
             dataType: "json",
             contentType : "application/json",
-            success: () => {
-                location.href = "/profile"
+            success: function(data) {
+                location.replace("/profile")
             },
             error: () => {
-                location.href = "/sign_in"
-            }
+                window.location.replace("/sign_in")
+            },
         });
     });
 });

@@ -4,24 +4,32 @@ import (
 	"errors"
 	"github.com/bemmanue/camagru/internal/model"
 	"github.com/bemmanue/camagru/internal/store"
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
+const (
+	sessionName = "camagru"
+)
+
 var (
 	errIncorrectEmailOrPassword = errors.New("incorrect email or password")
+	errNotAuthenticated         = errors.New("not authenticated")
 )
 
 type server struct {
-	router *gin.Engine
-	store  store.Store
+	router       *gin.Engine
+	store        store.Store
+	sessionStore sessions.Store
 }
 
 // newServer ...
-func newServer(store store.Store) *server {
+func newServer(store store.Store, sessionStore sessions.Store) *server {
 	s := &server{
-		router: gin.Default(),
-		store:  store,
+		router:       gin.Default(),
+		store:        store,
+		sessionStore: sessionStore,
 	}
 
 	s.configureRouter()
@@ -36,16 +44,35 @@ func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // configureRouter ...
 func (s *server) configureRouter() {
+	s.router.Use(sessions.Sessions(sessionName, s.sessionStore))
+	s.router.LoadHTMLGlob("web/templates/*")
 
 	s.router.Static("/web", "./web")
 
 	s.router.GET("/", s.getIndex)
 	s.router.GET("/sign_in", s.getSignIn)
 	s.router.GET("/sign_up", s.getSignUp)
-	s.router.GET("/profile", s.getProfile)
 
 	s.router.POST("/sign_in", s.postSignIn)
 	s.router.POST("/sign_up", s.postSignUp)
+
+	authorized := s.router.Group("")
+	authorized.Use(AuthenticateUser())
+	{
+		authorized.GET("/profile", s.getProfile)
+	}
+}
+
+func AuthenticateUser() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		session := sessions.Default(c)
+		sessionID := session.Get("user_id")
+		if sessionID == nil {
+			c.HTML(http.StatusUnauthorized, "error.html", gin.H{"error": "401 Unauthorized"})
+			c.Abort()
+		}
+		c.Next()
+	}
 }
 
 func (s *server) getIndex(c *gin.Context) {
@@ -76,11 +103,18 @@ func (s *server) postSignIn(c *gin.Context) {
 
 	u, err := s.store.User().FindByUsername(form.Username)
 	if err != nil || !u.ComparePassword(form.Password) {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": errIncorrectEmailOrPassword})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": errIncorrectEmailOrPassword.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"username": form.Username, "password": form.Password})
+	session := sessions.Default(c)
+	session.Set("user_id", u.ID)
+	if err = session.Save(); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"user_id": session.Get("user_id")})
 }
 
 func (s *server) postSignUp(c *gin.Context) {

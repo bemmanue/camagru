@@ -34,6 +34,27 @@ func (r *UserRepository) Create(u *model.User) error {
 }
 
 // FindByUsername ...
+func (r *UserRepository) Find(id int) (*model.User, error) {
+	u := &model.User{}
+	if err := r.store.db.QueryRow(
+		"select user_id, username, email, encrypted_password from users where user_id  = $1",
+		id,
+	).Scan(
+		&u.ID,
+		&u.Username,
+		&u.Email,
+		&u.EncryptedPassword,
+	); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, store.ErrRecordNotFound
+		}
+
+		return nil, err
+	}
+	return u, nil
+}
+
+// FindByUsername ...
 func (r *UserRepository) FindByUsername(username string) (*model.User, error) {
 	u := &model.User{}
 	if err := r.store.db.QueryRow(
