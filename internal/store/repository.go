@@ -9,3 +9,8 @@ type UserRepository interface {
 	FindByEmail(string) (*model.User, error)
 	FindByUsername(string) (*model.User, error)
 }
+
+// ImageRepository ...
+type ImageRepository interface {
+	Create(*model.Image) error
+}

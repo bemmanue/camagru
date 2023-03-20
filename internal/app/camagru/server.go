@@ -6,16 +6,20 @@ import (
 	"github.com/bemmanue/camagru/internal/store"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"net/http"
+	"path/filepath"
+	"time"
 )
 
 const (
 	sessionName = "camagru"
+	imagesPath  = "data/"
 )
 
 var (
 	errIncorrectEmailOrPassword = errors.New("incorrect email or password")
-	errNotAuthenticated         = errors.New("not authenticated")
+	errUnauthorized             = errors.New("unauthorized")
 )
 
 type server struct {
@@ -44,6 +48,8 @@ func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // configureRouter ...
 func (s *server) configureRouter() {
+	s.router.MaxMultipartMemory = 8 << 20
+
 	s.router.Use(sessions.Sessions(sessionName, s.sessionStore))
 	s.router.LoadHTMLGlob("web/templates/*")
 
@@ -60,6 +66,7 @@ func (s *server) configureRouter() {
 	authorized.Use(AuthenticateUser())
 	{
 		authorized.GET("/profile", s.getProfile)
+		authorized.POST("/upload", s.postUpload)
 	}
 }
 
@@ -68,9 +75,11 @@ func AuthenticateUser() gin.HandlerFunc {
 		session := sessions.Default(c)
 		sessionID := session.Get("user_id")
 		if sessionID == nil {
-			c.HTML(http.StatusUnauthorized, "error.html", gin.H{"error": "401 Unauthorized"})
+			c.HTML(http.StatusUnauthorized, "error.html", gin.H{"error": errUnauthorized.Error()})
 			c.Abort()
 		}
+
+		c.Set("user_id", sessionID.(int))
 		c.Next()
 	}
 }
@@ -144,6 +153,47 @@ func (s *server) postSignUp(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, gin.H{"username": form.Username, "email": form.Email, "password": form.Password})
+}
+
+func (s *server) postUpload(c *gin.Context) {
+	file, err := c.FormFile("file")
+	if err != nil {
+		c.String(http.StatusBadRequest, "get form err: %s", err.Error())
+		return
+	}
+
+	id, err := uuid.NewUUID()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": err.Error()})
+		return
+	}
+
+	filename := imagesPath + id.String() + filepath.Ext(file.Filename)
+
+	if err := c.SaveUploadedFile(file, filename); err != nil {
+		c.String(http.StatusBadRequest, "upload file err: %s", err.Error())
+		return
+	}
+
+	userId, ok := c.Get("user_id")
+	if ok == false {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": "no user id"})
+		return
+	}
+
+	i := &model.Image{
+		UserID:     userId.(int),
+		Filename:   filename,
+		UploadTime: time.Now(),
+	}
+
+	if err := s.store.Image().Create(i); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": err.Error()})
+		return
+	}
+
+	c.Header("Location", filename)
+	c.JSON(http.StatusCreated, gin.H{"status": "uploaded"})
 }
 
 func (s *server) getProfile(c *gin.Context) {

@@ -7,8 +7,9 @@ import (
 )
 
 type Store struct {
-	db             *sql.DB
-	userRepository *UserRepository
+	db              *sql.DB
+	userRepository  *UserRepository
+	imageRepository *ImageRepository
 }
 
 func New(db *sql.DB) *Store {
@@ -27,4 +28,16 @@ func (s *Store) User() store.UserRepository {
 	}
 
 	return s.userRepository
+}
+
+func (s *Store) Image() store.ImageRepository {
+	if s.imageRepository != nil {
+		return s.imageRepository
+	}
+
+	s.imageRepository = &ImageRepository{
+		store: s,
+	}
+
+	return s.imageRepository
 }

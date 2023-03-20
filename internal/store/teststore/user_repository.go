@@ -6,8 +6,9 @@ import (
 )
 
 type UserRepository struct {
-	store *Store
-	users map[int]*model.User
+	store  *Store
+	users  map[int]*model.User
+	images map[int]*model.Image
 }
 
 // Create ...

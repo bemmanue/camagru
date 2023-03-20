@@ -33,7 +33,7 @@ func (r *UserRepository) Create(u *model.User) error {
 	return nil
 }
 
-// FindByUsername ...
+// Find ...
 func (r *UserRepository) Find(id int) (*model.User, error) {
 	u := &model.User{}
 	if err := r.store.db.QueryRow(

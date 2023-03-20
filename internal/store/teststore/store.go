@@ -6,7 +6,8 @@ import (
 )
 
 type Store struct {
-	userRepository *UserRepository
+	userRepository  *UserRepository
+	imageRepository *ImageRepository
 }
 
 func New() *Store {
@@ -24,4 +25,17 @@ func (s *Store) User() store.UserRepository {
 	}
 
 	return s.userRepository
+}
+
+func (s *Store) Image() store.ImageRepository {
+	if s.imageRepository != nil {
+		return s.imageRepository
+	}
+
+	s.imageRepository = &ImageRepository{
+		store:  s,
+		images: make(map[int]*model.Image),
+	}
+
+	return s.imageRepository
 }
