@@ -15,6 +15,9 @@ func TestUser(t *testing.T) *User {
 
 func TestImage(t *testing.T) *Image {
 	return &Image{
+		Name:       "image",
+		Extension:  ".ext",
+		Path:       "path/to/image.ext",
 		UserID:     1,
 		UploadTime: time.Now(),
 	}

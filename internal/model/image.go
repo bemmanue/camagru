@@ -5,7 +5,9 @@ import "time"
 // Image ...
 type Image struct {
 	ID         int
-	UserID     int
-	Filename   string
+	Name       string
+	Extension  string
+	Path       string
 	UploadTime time.Time
+	UserID     int
 }

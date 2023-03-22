@@ -2,26 +2,33 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link rel="stylesheet" href="/web/css/sign_up.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
     <script src="/web/js/jquery.js"></script>
     <script src="/web/js/jquery.validate.js"></script>
     <script src="/web/js/sign_up.js"></script>
     <title>Camagru</title>
 </head>
 <body>
-<form id="form">
-    <label for="username">Логин</label>
-    <input id="username" name="username" type="text">
-    <br>
-    <label for="email">Почта</label>
-    <input id="email" name="email" type="text">
-    <br>
-    <label for="password">Пароль</label>
-    <input id="password" name="password" type="password">
-    <br>
-    <label for="password_confirm">Повторите пароль</label>
-    <input id="password_confirm" name="password_confirm" type="password">
-    <br>
-    <button type="submit" class="button">Зарегистрироваться</button>
-</form>
+<header class="header">
+    <nav class="menu">
+        <a href="/" class="menu__logo">Camagru</a>
+        <ul class="menu__ul">
+            <li class="menu__li"><a href="/sign_in" class="menu__link">Sign in</a></li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+    <form id="form" class="form">
+        <h1 class="form_name">Sign up to Camagru</h1>
+        <div class="input"><input id="username" name="username" type="text" placeholder="Username" class="field"></div>
+        <div class="input"><input id="email" name="email" type="text" placeholder="Email" class="field"></div>
+        <div class="input"><input id="password" name="password" type="password" placeholder="Password" class="field"></div>
+        <div class="input"><input id="password_confirm" name="password_confirm" type="password" placeholder="Confirm password" class="field"></div>
+        <button type="submit" class="button">Sign up</button>
+    </form>
+</main>
 </body>
 </html>

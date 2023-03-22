@@ -13,4 +13,7 @@ type UserRepository interface {
 // ImageRepository ...
 type ImageRepository interface {
 	Create(*model.Image) error
+	FindByName(name string) (*model.Image, error)
+	SelectAllImages() ([]string, error)
+	GetPage(page int) ([]string, error)
 }

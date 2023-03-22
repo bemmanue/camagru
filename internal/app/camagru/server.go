@@ -54,6 +54,7 @@ func (s *server) configureRouter() {
 	s.router.LoadHTMLGlob("web/templates/*")
 
 	s.router.Static("/web", "./web")
+	s.router.Static("/data", "./data")
 
 	s.router.GET("/", s.getIndex)
 	s.router.GET("/sign_in", s.getSignIn)
@@ -66,6 +67,8 @@ func (s *server) configureRouter() {
 	authorized.Use(AuthenticateUser())
 	{
 		authorized.GET("/profile", s.getProfile)
+		authorized.GET("/profile/:id", s.getImage)
+		authorized.GET("/feed", s.getFeed)
 		authorized.POST("/upload", s.postUpload)
 	}
 }
@@ -162,15 +165,17 @@ func (s *server) postUpload(c *gin.Context) {
 		return
 	}
 
-	id, err := uuid.NewUUID()
+	uu, err := uuid.NewUUID()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"status": err.Error()})
 		return
 	}
 
-	filename := imagesPath + id.String() + filepath.Ext(file.Filename)
+	name := uu.String()
+	extension := filepath.Ext(file.Filename)
+	path := imagesPath + name + extension
 
-	if err := c.SaveUploadedFile(file, filename); err != nil {
+	if err := c.SaveUploadedFile(file, path); err != nil {
 		c.String(http.StatusBadRequest, "upload file err: %s", err.Error())
 		return
 	}
@@ -182,9 +187,11 @@ func (s *server) postUpload(c *gin.Context) {
 	}
 
 	i := &model.Image{
-		UserID:     userId.(int),
-		Filename:   filename,
+		Name:       name,
+		Extension:  extension,
+		Path:       path,
 		UploadTime: time.Now(),
+		UserID:     userId.(int),
 	}
 
 	if err := s.store.Image().Create(i); err != nil {
@@ -192,10 +199,32 @@ func (s *server) postUpload(c *gin.Context) {
 		return
 	}
 
-	c.Header("Location", filename)
+	c.Header("Location", path)
 	c.JSON(http.StatusCreated, gin.H{"status": "uploaded"})
 }
 
 func (s *server) getProfile(c *gin.Context) {
 	c.File("./web/templates/profile.html")
+}
+
+func (s *server) getImage(c *gin.Context) {
+	name := c.Param("id")
+
+	img, err := s.store.Image().FindByName(name)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+		return
+	}
+
+	c.File(img.Path)
+}
+
+func (s *server) getFeed(c *gin.Context) {
+	images, err := s.store.Image().SelectAllImages()
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.HTML(http.StatusOK, "feed.html", gin.H{"images": images})
 }
