@@ -49,7 +49,7 @@ $(document).ready(function() {
             dataType: "json",
             contentType : "application/json",
             success: () => {
-                location.href = "/profile"
+                location.href = "/confirm"
             },
             error: () => {
                 location.href = "/sign_up"

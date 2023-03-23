@@ -2,18 +2,42 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <script src="/web/js/jquery.js"></script>
-    <script src="/web/js/profile.js"></script>
+    <link rel="stylesheet" href="/web/css/profile.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@200;400&family=Sawarabi+Gothic&display=swap" rel="stylesheet">
     <title>Camagru</title>
 </head>
 <body>
-    <a href="/profile">Профиль</a>
-    <a href="/feed">Лента</a>
-    <a href="/settings">Настройки</a>
-    <p>Мой профиль</p>
-    <form id="form">
-        <input type="file" id="file" name="file" accept="image/png, image/jpeg">
-        <button type="submit">Загрузить</button>
-    </form>
+<header class="header">
+    <nav class="menu">
+        <a href="/" class="menu__logo">Camagru</a>
+        <ul class="menu__ul">
+            <li class="menu__li"><a href="/feed" class="menu__link">Feed</a></li>
+            <li class="menu__li"><a href="/new" class="menu__link">New</a></li>
+            <li class="menu__li"><a href="/profile" class="menu__link menu__actual">Profile</a></li>
+        </ul>
+        <a href="/settings" class="menu__settings">Settings</a>
+    </nav>
+</header>
+<main class="main">
+    <ul class="feed">
+        {{ range .Images }}
+        <li>
+            <div class="post">
+                <div class="top-info">
+                    <p class="author">{{ .Username }}</p>
+                    <p class="date">{{ .TimeSinceUpload }}</p>
+                </div>
+                <img src="{{ .Path }}" class="image">
+                <div class="bottom-info">
+                    <p class="comments">Comments</p>
+                    <p class="likes">Likes</p>
+                </div>
+            </div>
+        </li>
+        {{ end }}
+    </ul>
+</main>
 </body>
 </html>

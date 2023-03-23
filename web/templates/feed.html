@@ -2,18 +2,42 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link rel="stylesheet" href="/web/css/feed.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@200;400&family=Sawarabi+Gothic&display=swap" rel="stylesheet">
     <title>Camagru</title>
 </head>
 <body>
-    <a href="/profile">Профиль</a>
-    <a href="/feed">Лента</a>
-    <a href="/settings">Настройки</a>
-    <p>Лента</p>
-
-    <ul>{{ range .images }}
-        <li><img src="{{ . }}"></li>
+<header class="header">
+    <nav class="menu">
+        <a href="/" class="menu__logo">Camagru</a>
+        <ul class="menu__ul">
+            <li class="menu__li"><a href="/feed" class="menu__link menu__actual">Feed</a></li>
+            <li class="menu__li"><a href="/new" class="menu__link">New</a></li>
+            <li class="menu__li"><a href="/profile" class="menu__link">Profile</a></li>
+        </ul>
+        <a href="/settings" class="menu__settings">Settings</a>
+    </nav>
+</header>
+<main class="main">
+    <ul class="feed">
+        {{ range .Images }}
+        <li>
+            <div class="post">
+                <div class="top-info">
+                    <p class="author">{{ .Username }}</p>
+                    <p class="date">{{ .TimeSinceUpload }}</p>
+                </div>
+                <img src="{{ .Path }}" class="image">
+                <div class="bottom-info">
+                    <p class="comments">Comments</p>
+                    <p class="likes">Likes</p>
+                </div>
+            </div>
+        </li>
         {{ end }}
     </ul>
-
+</main>
 </body>
 </html>

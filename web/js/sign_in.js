@@ -14,7 +14,7 @@ $(document).ready(function() {
             dataType: "json",
             contentType : "application/json",
             success: function(data) {
-                location.replace("/profile")
+                location.replace("/feed")
             },
             error: () => {
                 window.location.replace("/sign_in")
