@@ -33,25 +33,38 @@ func (r *ImageRepository) FindByName(name string) (*model.Image, error) {
 }
 
 // SelectAllImages ...
-func (r *ImageRepository) SelectAllImages() ([]string, error) {
-	var images []string
+func (r *ImageRepository) SelectAllImages() ([]model.Image, error) {
+	var images []model.Image
 
 	for _, image := range r.images {
-		images = append(images, image.Path)
+		images = append(images, *image)
+	}
+
+	return images, nil
+}
+
+// SelectUserImages ...
+func (r *ImageRepository) SelectUserImages(userID int) ([]model.Image, error) {
+	var images []model.Image
+
+	for _, image := range r.images {
+		if image.UserID == userID {
+			images = append(images, *image)
+		}
 	}
 
 	return images, nil
 }
 
 // GetPage ...
-func (r *ImageRepository) GetPage(page int) ([]string, error) {
-	var images []string
+func (r *ImageRepository) GetPage(page int) ([]model.Image, error) {
+	var images []model.Image
 
 	for _, image := range r.images {
 		if len(images) > pageSize {
 			break
 		}
-		images = append(images, image.Path)
+		images = append(images, *image)
 	}
 
 	return images, nil

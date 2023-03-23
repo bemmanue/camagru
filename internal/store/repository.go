@@ -14,6 +14,7 @@ type UserRepository interface {
 type ImageRepository interface {
 	Create(*model.Image) error
 	FindByName(name string) (*model.Image, error)
-	SelectAllImages() ([]string, error)
-	GetPage(page int) ([]string, error)
+	SelectImages() ([]model.Image, error)
+	SelectUserImages(userID int) ([]model.Image, error)
+	SelectImagesPage(page int) ([]model.Image, error)
 }

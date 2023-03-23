@@ -2,8 +2,10 @@ package sqlstore
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/bemmanue/camagru/internal/model"
 	"github.com/bemmanue/camagru/internal/store"
+	"time"
 )
 
 const (
@@ -54,43 +56,136 @@ func (r *ImageRepository) FindByName(name string) (*model.Image, error) {
 	return img, nil
 }
 
-// SelectAllImages ...
-func (r *ImageRepository) SelectAllImages() ([]string, error) {
-	rows, err := r.store.db.Query("select path from images order by id")
+// SelectImages ...
+func (r *ImageRepository) SelectImages() ([]model.Image, error) {
+	query := "select images.id, name, extension, path, upload_time, images.user_id, username " +
+		"from images " +
+		"join camagru.public.users on images.user_id = users.id " +
+		"order by upload_time desc"
+
+	rows, err := r.store.db.Query(query)
 	if err != nil {
 		return nil, err
 	}
 
 	defer rows.Close()
 
-	var images []string
-	image := model.Image{}
-
+	var images []model.Image
 	for rows.Next() {
-		rows.Scan(&image.Path)
-		images = append(images, image.Path)
+		image := model.Image{}
+		if err := rows.Scan(
+			&image.ID,
+			&image.Name,
+			&image.Extension,
+			&image.Path,
+			&image.UploadTime,
+			&image.UserID,
+			&image.Username,
+		); err != nil {
+			return nil, err
+		}
+
+		image.TimeSinceUpload = CountTimeSinceUpload(image.UploadTime)
+
+		images = append(images, image)
 	}
 
 	return images, nil
 }
 
-// GetPage ...
-func (r *ImageRepository) GetPage(page int) ([]string, error) {
-	rows, err := r.store.db.Query("select path from images order by id limit $1 offset $2",
-		pageSize,
-		pageSize*(page-1))
+// CountTimeSinceUpload ...
+func CountTimeSinceUpload(uploadTime time.Time) string {
+	var result string
+
+	timeNow := time.Now()
+	timeSpan := timeNow.Sub(uploadTime)
+
+	if timeSpan < time.Minute {
+		result = fmt.Sprintf("%d seconds", int(timeSpan.Round(time.Second).Seconds()))
+	} else if timeSpan < time.Hour {
+		result = fmt.Sprintf("%d minutes", int(timeSpan.Round(time.Minute).Minutes()))
+	} else if timeSpan < time.Hour*24 {
+		result = fmt.Sprintf("%d hours", int(timeSpan.Round(time.Hour).Hours()))
+	} else if timeSpan < time.Hour*24*7 {
+		result = fmt.Sprintf("%d days", int(timeSpan.Round(time.Hour).Hours()/24))
+	} else if timeSpan < time.Hour*24*365 {
+		result = fmt.Sprintf("%d weeks", int(timeSpan.Round(time.Hour).Hours()/24/7))
+	} else {
+		result = fmt.Sprintf("%d years", int(timeSpan.Round(time.Hour).Hours()/24/365))
+	}
+	return result
+}
+
+// SelectUserImages ...
+func (r *ImageRepository) SelectUserImages(userID int) ([]model.Image, error) {
+	query := fmt.Sprintf(
+		"select images.id, name, extension, path, upload_time, images.user_id, username "+
+			"from images join camagru.public.users on images.user_id = users.id "+
+			"where images.user_id = %d "+
+			"order by upload_time desc", userID)
+
+	rows, err := r.store.db.Query(query)
 	if err != nil {
 		return nil, err
 	}
 
 	defer rows.Close()
 
-	var images []string
-	image := model.Image{}
-
+	var images []model.Image
 	for rows.Next() {
-		rows.Scan(&image.Path)
-		images = append(images, image.Path)
+		image := model.Image{}
+		if err := rows.Scan(
+			&image.ID,
+			&image.Name,
+			&image.Extension,
+			&image.Path,
+			&image.UploadTime,
+			&image.UserID,
+			&image.Username,
+		); err != nil {
+			return nil, err
+		}
+
+		image.TimeSinceUpload = CountTimeSinceUpload(image.UploadTime)
+
+		images = append(images, image)
+	}
+
+	return images, nil
+}
+
+// SelectImagesPage ...
+func (r *ImageRepository) SelectImagesPage(page int) ([]model.Image, error) {
+	query := fmt.Sprintf("select images.id, name, extension, path, upload_time, images.user_id, username "+
+		"from images join camagru.public.users on images.user_id = users.id "+
+		"order by upload_time desc "+
+		"limit %d offset %d", pageSize, pageSize*(page-1))
+
+	rows, err := r.store.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var images []model.Image
+	for rows.Next() {
+		image := model.Image{}
+		if err := rows.Scan(
+			&image.ID,
+			&image.Name,
+			&image.Extension,
+			&image.Path,
+			&image.UploadTime,
+			&image.UserID,
+			&image.Username,
+		); err != nil {
+			return nil, err
+		}
+
+		image.TimeSinceUpload = CountTimeSinceUpload(image.UploadTime)
+
+		images = append(images, image)
 	}
 
 	return images, nil

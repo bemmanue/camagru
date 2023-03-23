@@ -66,10 +66,12 @@ func (s *server) configureRouter() {
 	authorized := s.router.Group("")
 	authorized.Use(AuthenticateUser())
 	{
-		authorized.GET("/profile", s.getProfile)
-		authorized.GET("/profile/:id", s.getImage)
 		authorized.GET("/feed", s.getFeed)
-		authorized.POST("/upload", s.postUpload)
+		authorized.GET("/new", s.getNew)
+		authorized.GET("/profile", s.getProfile)
+		authorized.GET("/settings", s.getSettings)
+
+		authorized.POST("/new", s.postNew)
 	}
 }
 
@@ -158,7 +160,7 @@ func (s *server) postSignUp(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"username": form.Username, "email": form.Email, "password": form.Password})
 }
 
-func (s *server) postUpload(c *gin.Context) {
+func (s *server) postNew(c *gin.Context) {
 	file, err := c.FormFile("file")
 	if err != nil {
 		c.String(http.StatusBadRequest, "get form err: %s", err.Error())
@@ -203,28 +205,36 @@ func (s *server) postUpload(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"status": "uploaded"})
 }
 
-func (s *server) getProfile(c *gin.Context) {
-	c.File("./web/templates/profile.html")
-}
-
-func (s *server) getImage(c *gin.Context) {
-	name := c.Param("id")
-
-	img, err := s.store.Image().FindByName(name)
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
-		return
-	}
-
-	c.File(img.Path)
-}
-
 func (s *server) getFeed(c *gin.Context) {
-	images, err := s.store.Image().SelectAllImages()
+	images, err := s.store.Image().SelectImages()
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.HTML(http.StatusOK, "feed.html", gin.H{"images": images})
+	c.HTML(http.StatusOK, "feed.html", gin.H{"Images": images})
+}
+
+func (s *server) getNew(c *gin.Context) {
+	c.File("./web/templates/new.html")
+}
+
+func (s *server) getProfile(c *gin.Context) {
+	userId, ok := c.Get("user_id")
+	if ok == false {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": "no user id"})
+		return
+	}
+
+	images, err := s.store.Image().SelectUserImages(userId.(int))
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.HTML(http.StatusOK, "profile.html", gin.H{"Images": images})
+}
+
+func (s *server) getSettings(c *gin.Context) {
+	c.File("./web/templates/settings.html")
 }
