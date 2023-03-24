@@ -14,13 +14,13 @@ const (
 
 // ImageRepository ...
 type ImageRepository struct {
-	store *Store
+	Store *Store
 }
 
 // Create ...
 func (r *ImageRepository) Create(i *model.Image) error {
 
-	if err := r.store.db.QueryRow(
+	if err := r.Store.db.QueryRow(
 		"insert into images (name, extension, path, upload_time, user_id) values ($1, $2, $3, $4, $5) returning id",
 		i.Name,
 		i.Extension,
@@ -37,7 +37,7 @@ func (r *ImageRepository) Create(i *model.Image) error {
 // FindByName ...
 func (r *ImageRepository) FindByName(name string) (*model.Image, error) {
 	img := &model.Image{}
-	if err := r.store.db.QueryRow(
+	if err := r.Store.db.QueryRow(
 		"select id, name, extension, path, upload_time, user_id from images where name = $1",
 		name,
 	).Scan(
@@ -58,12 +58,14 @@ func (r *ImageRepository) FindByName(name string) (*model.Image, error) {
 
 // SelectImages ...
 func (r *ImageRepository) SelectImages() ([]model.Image, error) {
-	query := "select images.id, name, extension, path, upload_time, images.user_id, username " +
+	query := "select images.id, name, extension, path, upload_time, images.user_id, username, count(likes.id) as like_count " +
 		"from images " +
-		"join camagru.public.users on images.user_id = users.id " +
-		"order by upload_time desc"
+		"join users on images.user_id = users.id " +
+		"left join likes on images.id = likes.image_id " +
+		"group by images.id, users.username, images.upload_time " +
+		"order by images.upload_time desc"
 
-	rows, err := r.store.db.Query(query)
+	rows, err := r.Store.db.Query(query)
 	if err != nil {
 		return nil, err
 	}
@@ -81,6 +83,7 @@ func (r *ImageRepository) SelectImages() ([]model.Image, error) {
 			&image.UploadTime,
 			&image.UserID,
 			&image.Username,
+			&image.Likes,
 		); err != nil {
 			return nil, err
 		}
@@ -124,7 +127,7 @@ func (r *ImageRepository) SelectUserImages(userID int) ([]model.Image, error) {
 			"where images.user_id = %d "+
 			"order by upload_time desc", userID)
 
-	rows, err := r.store.db.Query(query)
+	rows, err := r.Store.db.Query(query)
 	if err != nil {
 		return nil, err
 	}
@@ -161,7 +164,7 @@ func (r *ImageRepository) SelectImagesPage(page int) ([]model.Image, error) {
 		"order by upload_time desc "+
 		"limit %d offset %d", pageSize, pageSize*(page-1))
 
-	rows, err := r.store.db.Query(query)
+	rows, err := r.Store.db.Query(query)
 	if err != nil {
 		return nil, err
 	}

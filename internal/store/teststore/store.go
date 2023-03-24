@@ -8,6 +8,7 @@ import (
 type Store struct {
 	userRepository  *UserRepository
 	imageRepository *ImageRepository
+	likeRepository  *LikeRepository
 }
 
 func New() *Store {
@@ -38,4 +39,17 @@ func (s *Store) Image() store.ImageRepository {
 	}
 
 	return s.imageRepository
+}
+
+func (s *Store) Like() store.LikeRepository {
+	if s.likeRepository != nil {
+		return s.likeRepository
+	}
+
+	s.likeRepository = &LikeRepository{
+		store: s,
+		likes: make(map[int]*model.Like),
+	}
+
+	return s.likeRepository
 }

@@ -18,3 +18,10 @@ type ImageRepository interface {
 	SelectUserImages(userID int) ([]model.Image, error)
 	SelectImagesPage(page int) ([]model.Image, error)
 }
+
+// LikeRepository ...
+type LikeRepository interface {
+	Create(*model.Like) error
+	Delete(*model.Like) error
+	Find(imageID, userID int) (*model.Like, error)
+}

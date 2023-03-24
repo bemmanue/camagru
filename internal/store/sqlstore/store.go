@@ -10,6 +10,7 @@ type Store struct {
 	db              *sql.DB
 	userRepository  *UserRepository
 	imageRepository *ImageRepository
+	likeRepository  *LikeRepository
 }
 
 func New(db *sql.DB) *Store {
@@ -24,7 +25,7 @@ func (s *Store) User() store.UserRepository {
 	}
 
 	s.userRepository = &UserRepository{
-		store: s,
+		Store: s,
 	}
 
 	return s.userRepository
@@ -36,8 +37,20 @@ func (s *Store) Image() store.ImageRepository {
 	}
 
 	s.imageRepository = &ImageRepository{
-		store: s,
+		Store: s,
 	}
 
 	return s.imageRepository
+}
+
+func (s *Store) Like() store.LikeRepository {
+	if s.likeRepository != nil {
+		return s.likeRepository
+	}
+
+	s.likeRepository = &LikeRepository{
+		Store: s,
+	}
+
+	return s.likeRepository
 }

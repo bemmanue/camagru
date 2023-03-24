@@ -8,7 +8,7 @@ import (
 
 // UserRepository ...
 type UserRepository struct {
-	store *Store
+	Store *Store
 }
 
 // Create ...
@@ -21,7 +21,7 @@ func (r *UserRepository) Create(u *model.User) error {
 		return err
 	}
 
-	if err := r.store.db.QueryRow(
+	if err := r.Store.db.QueryRow(
 		"insert into users (username, email, encrypted_password) values ($1, $2, $3) returning id",
 		u.Username,
 		u.Email,
@@ -36,7 +36,7 @@ func (r *UserRepository) Create(u *model.User) error {
 // Find ...
 func (r *UserRepository) Find(id int) (*model.User, error) {
 	u := &model.User{}
-	if err := r.store.db.QueryRow(
+	if err := r.Store.db.QueryRow(
 		"select id, username, email, encrypted_password from users where id  = $1",
 		id,
 	).Scan(
@@ -57,7 +57,7 @@ func (r *UserRepository) Find(id int) (*model.User, error) {
 // FindByUsername ...
 func (r *UserRepository) FindByUsername(username string) (*model.User, error) {
 	u := &model.User{}
-	if err := r.store.db.QueryRow(
+	if err := r.Store.db.QueryRow(
 		"select id, username, email, encrypted_password from users where username  = $1",
 		username,
 	).Scan(
@@ -78,7 +78,7 @@ func (r *UserRepository) FindByUsername(username string) (*model.User, error) {
 // FindByEmail ...
 func (r *UserRepository) FindByEmail(email string) (*model.User, error) {
 	u := &model.User{}
-	if err := r.store.db.QueryRow(
+	if err := r.Store.db.QueryRow(
 		"select id, username, email, encrypted_password from users where email  = $1",
 		email,
 	).Scan(

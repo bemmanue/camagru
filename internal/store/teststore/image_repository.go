@@ -32,8 +32,8 @@ func (r *ImageRepository) FindByName(name string) (*model.Image, error) {
 	return nil, store.ErrRecordNotFound
 }
 
-// SelectAllImages ...
-func (r *ImageRepository) SelectAllImages() ([]model.Image, error) {
+// SelectImages ...
+func (r *ImageRepository) SelectImages() ([]model.Image, error) {
 	var images []model.Image
 
 	for _, image := range r.images {
@@ -56,8 +56,8 @@ func (r *ImageRepository) SelectUserImages(userID int) ([]model.Image, error) {
 	return images, nil
 }
 
-// GetPage ...
-func (r *ImageRepository) GetPage(page int) ([]model.Image, error) {
+// SelectImagesPage ...
+func (r *ImageRepository) SelectImagesPage(page int) ([]model.Image, error) {
 	var images []model.Image
 
 	for _, image := range r.images {

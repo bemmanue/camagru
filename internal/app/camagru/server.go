@@ -72,6 +72,7 @@ func (s *server) configureRouter() {
 		authorized.GET("/settings", s.getSettings)
 
 		authorized.POST("/new", s.postNew)
+		authorized.POST("/like", s.postLike)
 	}
 }
 
@@ -237,4 +238,40 @@ func (s *server) getProfile(c *gin.Context) {
 
 func (s *server) getSettings(c *gin.Context) {
 	c.File("./web/templates/settings.html")
+}
+
+func (s *server) postLike(c *gin.Context) {
+	type request struct {
+		PostID int `json:"post_id"`
+	}
+
+	var form request
+
+	err := c.BindJSON(&form)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	userId, ok := c.Get("user_id")
+	if ok == false {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": "no user id"})
+		return
+	}
+
+	like, err := s.store.Like().Find(form.PostID, userId.(int))
+	if err != nil {
+		err := s.store.Like().Create(&model.Like{ImageID: form.PostID, UserID: userId.(int)})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"status": err.Error()})
+			return
+		}
+	} else {
+		err := s.store.Like().Delete(like)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"status": err.Error()})
+			return
+		}
+	}
+	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }

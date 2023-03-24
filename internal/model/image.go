@@ -12,4 +12,5 @@ type Image struct {
 	TimeSinceUpload string
 	UserID          int
 	Username        string
+	Likes           int
 }
