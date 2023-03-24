@@ -107,3 +107,16 @@ body {
     height: 50px;
     color: #555555;
 }
+.like_button {
+    background: #FFFFFF;
+    cursor: pointer;
+}
+.like_img {
+    fill: #F8104B;
+}
+.dislike_img {
+    fill: #888888;
+}
+.dislike_img:hover {
+    fill: #F8104B;
+}
