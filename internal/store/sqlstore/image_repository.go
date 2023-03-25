@@ -96,6 +96,49 @@ func (r *ImageRepository) SelectImages() ([]model.Image, error) {
 	return images, nil
 }
 
+// GetPostData ...
+func (r *ImageRepository) GetPostData(userID int) ([]model.Image, error) {
+	query := fmt.Sprintf("select images.id, name, extension, path, upload_time, images.user_id, username, "+
+		"count(likes.id) as like_count, "+
+		"(case when sum(case when likes.user_id = %d then 1 else 0 END) > 0 then 'like' else 'dislike' end) as user_like "+
+		"from images "+
+		"join users on images.user_id = users.id "+
+		"left join likes on images.id = likes.image_id "+
+		"group by images.id, users.username "+
+		"order by images.upload_time desc", userID)
+
+	rows, err := r.Store.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var images []model.Image
+	for rows.Next() {
+		image := model.Image{}
+		if err := rows.Scan(
+			&image.ID,
+			&image.Name,
+			&image.Extension,
+			&image.Path,
+			&image.UploadTime,
+			&image.UserID,
+			&image.Username,
+			&image.Likes,
+			&image.LikeStatus,
+		); err != nil {
+			return nil, err
+		}
+
+		image.TimeSinceUpload = CountTimeSinceUpload(image.UploadTime)
+
+		images = append(images, image)
+	}
+
+	return images, nil
+}
+
 // CountTimeSinceUpload ...
 func CountTimeSinceUpload(uploadTime time.Time) string {
 	var result string

@@ -14,18 +14,17 @@ $(document).ready(function() {
             dataType: "json",
             contentType : "application/json",
             success: () => {
-                const btn = this.querySelector(".like_svg")
-
+                console.log("fail")
                 const likes = this.parentNode.querySelector(".like_count")
-                console.log(likes.innerHTML)
-                if (btn.classList.contains("dislike_img")) {
+
+                if (this.classList.contains("dislike")) {
                     likes.innerHTML = (parseInt(likes.innerHTML) + 1).toString()
                 } else {
                     likes.innerHTML = (parseInt(likes.innerHTML) - 1).toString()
                 }
 
-                btn.classList.toggle("dislike_img")
-                btn.classList.toggle("like_img")
+                this.classList.toggle("dislike")
+                this.classList.toggle("like")
             },
             error: () => {
 

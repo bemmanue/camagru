@@ -13,4 +13,5 @@ type Image struct {
 	UserID          int
 	Username        string
 	Likes           int
+	LikeStatus      string
 }

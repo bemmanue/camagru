@@ -17,6 +17,7 @@ type ImageRepository interface {
 	SelectImages() ([]model.Image, error)
 	SelectUserImages(userID int) ([]model.Image, error)
 	SelectImagesPage(page int) ([]model.Image, error)
+	GetPostData(userID int) ([]model.Image, error)
 }
 
 // LikeRepository ...

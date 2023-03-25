@@ -207,7 +207,15 @@ func (s *server) postNew(c *gin.Context) {
 }
 
 func (s *server) getFeed(c *gin.Context) {
-	images, err := s.store.Image().SelectImages()
+	userId, ok := c.Get("user_id")
+	if ok == false {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": "no user id"})
+		return
+	}
+
+	images, err := s.store.Image().GetPostData(userId.(int))
+
+	//images, err := s.store.Image().SelectImages()
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
