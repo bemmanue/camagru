@@ -202,6 +202,17 @@ func (s *server) postNew(c *gin.Context) {
 		return
 	}
 
+	p := &model.Post{
+		ImageID:      i.ID,
+		AuthorID:     userId.(int),
+		CreationTime: time.Now(),
+	}
+
+	if err := s.store.Post().Create(p); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": err.Error()})
+		return
+	}
+
 	c.Header("Location", path)
 	c.JSON(http.StatusCreated, gin.H{"status": "uploaded"})
 }
@@ -213,15 +224,14 @@ func (s *server) getFeed(c *gin.Context) {
 		return
 	}
 
-	images, err := s.store.Image().GetPostData(userId.(int))
+	posts, err := s.store.Post().ReadPostData(userId.(int))
 
-	//images, err := s.store.Image().SelectImages()
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.HTML(http.StatusOK, "feed.html", gin.H{"Images": images})
+	c.HTML(http.StatusOK, "feed.html", gin.H{"Posts": posts})
 }
 
 func (s *server) getNew(c *gin.Context) {
@@ -235,13 +245,14 @@ func (s *server) getProfile(c *gin.Context) {
 		return
 	}
 
-	images, err := s.store.Image().SelectUserImages(userId.(int))
+	posts, err := s.store.Post().ReadPostData(userId.(int))
+	//posts, err := s.store.Post().ReadUserPostData(userId.(int))
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.HTML(http.StatusOK, "profile.html", gin.H{"Images": images})
+	c.HTML(http.StatusOK, "profile.html", gin.H{"Posts": posts})
 }
 
 func (s *server) getSettings(c *gin.Context) {

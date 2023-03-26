@@ -11,6 +11,24 @@ type LikeRepository struct {
 	likes map[int]*model.Like
 }
 
+// Create ...
+func (r *LikeRepository) Create(l *model.Like) error {
+	l.ID = len(r.likes) + 1
+	r.likes[l.ID] = l
+	return nil
+}
+
+// Delete ...
+func (r *LikeRepository) Delete(l *model.Like) error {
+	for i, like := range r.likes {
+		if like.ImageID == l.ImageID &&
+			like.UserID == l.UserID {
+			delete(r.likes, i)
+		}
+	}
+	return nil
+}
+
 // Find ...
 func (r *LikeRepository) Find(imageID, userID int) (*model.Like, error) {
 	for _, like := range r.likes {

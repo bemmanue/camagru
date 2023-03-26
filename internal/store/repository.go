@@ -2,6 +2,12 @@ package store
 
 import "github.com/bemmanue/camagru/internal/model"
 
+// PostRepository ...
+type PostRepository interface {
+	Create(*model.Post) error
+	ReadPostData(userID int) ([]model.PostData, error)
+}
+
 // UserRepository ...
 type UserRepository interface {
 	Create(*model.User) error
@@ -13,11 +19,11 @@ type UserRepository interface {
 // ImageRepository ...
 type ImageRepository interface {
 	Create(*model.Image) error
-	FindByName(name string) (*model.Image, error)
-	SelectImages() ([]model.Image, error)
-	SelectUserImages(userID int) ([]model.Image, error)
-	SelectImagesPage(page int) ([]model.Image, error)
-	GetPostData(userID int) ([]model.Image, error)
+	//FindByName(name string) (*model.Image, error)
+	//SelectImages() ([]model.Image, error)
+	//SelectUserImages(userID int) ([]model.Image, error)
+	//SelectImagesPage(page int) ([]model.Image, error)
+	//GetPostData(userID int) ([]model.Image, error)
 }
 
 // LikeRepository ...

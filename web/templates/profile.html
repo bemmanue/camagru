@@ -22,17 +22,27 @@
 </header>
 <main class="main">
     <ul class="feed">
-        {{ range .Images }}
+        {{ range .Posts }}
         <li>
-            <div class="post">
+            <div class="post" id="{{ .ID }}">
                 <div class="top-info">
-                    <p class="author">{{ .Username }}</p>
+                    <p class="author">{{ .Author }}</p>
                     <p class="date">{{ .TimeSinceUpload }}</p>
                 </div>
-                <img src="{{ .Path }}" class="image">
+                <img src="{{ .ImagePath }}" class="image">
                 <div class="bottom-info">
-                    <p class="comments">Comments</p>
-                    <p class="likes">Likes</p>
+                    <div class="comment-container">
+                        <p class="comment_count">0</p>
+                        <p>Comments</p>
+                    </div>
+                    <div class="like-container">
+                        <p class="like_count">{{ .LikeCount }}</p>
+                        <button type="submit" class="like_button {{ .LikeStatus }}">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" class="like_svg">
+                                <path d=""></path>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             </div>
         </li>

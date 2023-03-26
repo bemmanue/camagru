@@ -6,6 +6,7 @@ import (
 )
 
 type Store struct {
+	postRepository  *PostRepository
 	userRepository  *UserRepository
 	imageRepository *ImageRepository
 	likeRepository  *LikeRepository
@@ -13,6 +14,19 @@ type Store struct {
 
 func New() *Store {
 	return &Store{}
+}
+
+func (s *Store) Post() store.PostRepository {
+	if s.postRepository != nil {
+		return s.postRepository
+	}
+
+	s.postRepository = &PostRepository{
+		store: s,
+		posts: make(map[int]*model.Post),
+	}
+
+	return s.postRepository
 }
 
 func (s *Store) User() store.UserRepository {

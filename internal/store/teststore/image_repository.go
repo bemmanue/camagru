@@ -32,6 +32,11 @@ func (r *ImageRepository) FindByName(name string) (*model.Image, error) {
 	return nil, store.ErrRecordNotFound
 }
 
+// GetPostData ...
+func (r *ImageRepository) GetPostData(userID int) ([]model.Image, error) {
+	return []model.Image{}, store.ErrRecordNotFound
+}
+
 // SelectImages ...
 func (r *ImageRepository) SelectImages() ([]model.Image, error) {
 	var images []model.Image
