@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@200;400&family=Sawarabi+Gothic&display=swap" rel="stylesheet">
     <script src="/web/js/jquery.js"></script>
+    <script src="/web/js/jquery.validate.js"></script>
     <script src="/web/js/feed.js"></script>
     <title>Camagru</title>
 </head>
@@ -34,7 +35,7 @@
                 <img src="{{ .ImagePath }}" class="image">
                 <div class="bottom-info">
                     <div class="comment-container">
-                        <p class="comment_count">0</p>
+                        <p class="comment_count">{{ .CommentCount }}</p>
                         <p>Comments</p>
                     </div>
                     <div class="like-container">
@@ -45,6 +46,20 @@
                             </svg>
                         </button>
                     </div>
+                </div>
+                <div class="comments-container">
+                    <ul class="comments">
+                        <li class="comment"><b>bemmanue</b> Nice! I love you too much! Thank you! Bye bye)</li>
+                        <li class="comment"><b>dwillard</b> Good job!</li>
+                    </ul>
+                </div>
+                <div class="leave-comment-container">
+                    <form id="form_{{ .ID }}" class="leave-comment">
+                        <div class="comment-field">
+                            <input id="comment_{{ .ID }}" class="comment-input" name="comment" type="text" placeholder="Add a comment..." >
+                            <button id="button_{{ .ID }}" type="submit" class="comment-button">Post</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </li>

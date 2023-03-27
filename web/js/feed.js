@@ -1,3 +1,5 @@
+const form = $(".leave-comment");
+
 $(document).ready(function() {
 
     $(".like_button").click(function(e) {
@@ -30,5 +32,42 @@ $(document).ready(function() {
 
             }
         });
+    });
+
+    $('form').each(function() {
+        $(this).validate({
+
+            errorPlacement: function(error, element) {
+                error.appendTo(element.closest('form'))
+            },
+
+            rules: {
+                comment: {
+                    required: true,
+                    maxlength: 200,
+                },
+            },
+
+            submitHandler: function(data){
+                console.log($(data.querySelector(".comment-input")).val())
+
+                $.ajax({
+                    type: "POST",
+                    url: "/comment",
+                    data: JSON.stringify({
+                        "post_id" : parseInt(data.closest(".post").id),
+                        "comment" : $(data.querySelector(".comment-input")).val(),
+                    }),
+                    dataType: "json",
+                    contentType : "application/json",
+                    success: () => {
+
+                    },
+                    error: () => {
+
+                    },
+                });
+            }
+        })
     });
 });

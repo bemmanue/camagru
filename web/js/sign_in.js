@@ -9,11 +9,11 @@ $(document).ready(function() {
             url: "/sign_in",
             data: JSON.stringify({
                 "username" : $('#username').val(),
-                "password" : $('#password').val()}
-            ),
+                "password" : $('#password').val(),
+            }),
             dataType: "json",
             contentType : "application/json",
-            success: function(data) {
+            success: function() {
                 location.replace("/feed")
             },
             error: () => {

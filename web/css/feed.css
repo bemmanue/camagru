@@ -118,6 +118,72 @@ body {
     padding-right: 5px;
 }
 
+.comments-container {
+    display: flex;
+    flex-direction: column;
+    width: 450px;
+}
+.comments {
+    display: flex;
+    flex-direction: column;
+    list-style: none;
+}
+.comment {
+    padding-bottom: 15px;
+}
+
+.leave-comment-container {
+    display: flex;
+    flex-direction: column;
+    width: 450px;
+    padding-bottom: 25px;
+    height: 50px;
+}
+.leave-comment {
+    display: flex;
+    flex-direction: column;
+}
+.comment-field {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    height: 40px;
+    border-width: 1px;
+    border-color: #CCCCCC;
+    border-radius: 15px;
+    border-style: solid;
+    width: 450px;
+}
+.comment-input {
+    border-radius: 15px;
+    font-size: 16px;
+    padding: 0 0 0 10px;
+    width: 400px;
+}
+.comment-input:focus {
+    outline:0;
+}
+.comment-button {
+    background: #FFFFFF;
+    border-radius: 15px;
+    width: 80px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #6784FF;
+}
+.comment-button:hover {
+    cursor: pointer;
+    color: #5C7AF5;
+}
+label.error {
+    padding-top: 5px;
+    padding-left: 10px;
+    font-size: 12px;
+    margin: 0;
+    color: #666666;
+}
+
+
 /*Like*/
 .like-container {
     display: flex;
