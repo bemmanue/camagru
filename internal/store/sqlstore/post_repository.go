@@ -3,6 +3,7 @@ package sqlstore
 import (
 	"fmt"
 	"github.com/bemmanue/camagru/internal/model"
+	"time"
 )
 
 // PostRepository ...
@@ -66,4 +67,27 @@ func (r *PostRepository) ReadPostData(userID int) ([]model.PostData, error) {
 	}
 
 	return posts, nil
+}
+
+// CountTimeSinceUpload ...
+func CountTimeSinceUpload(uploadTime time.Time) string {
+	var result string
+
+	timeNow := time.Now()
+	timeSpan := timeNow.Sub(uploadTime)
+
+	if timeSpan < time.Minute {
+		result = fmt.Sprintf("%d seconds", int(timeSpan.Round(time.Second).Seconds()))
+	} else if timeSpan < time.Hour {
+		result = fmt.Sprintf("%d minutes", int(timeSpan.Round(time.Minute).Minutes()))
+	} else if timeSpan < time.Hour*24 {
+		result = fmt.Sprintf("%d hours", int(timeSpan.Round(time.Hour).Hours()))
+	} else if timeSpan < time.Hour*24*7 {
+		result = fmt.Sprintf("%d days", int(timeSpan.Round(time.Hour).Hours()/24))
+	} else if timeSpan < time.Hour*24*365 {
+		result = fmt.Sprintf("%d weeks", int(timeSpan.Round(time.Hour).Hours()/24/7))
+	} else {
+		result = fmt.Sprintf("%d years", int(timeSpan.Round(time.Hour).Hours()/24/365))
+	}
+	return result
 }

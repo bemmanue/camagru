@@ -7,11 +7,12 @@ import (
 )
 
 type Store struct {
-	db              *sql.DB
-	postRepository  *PostRepository
-	userRepository  *UserRepository
-	imageRepository *ImageRepository
-	likeRepository  *LikeRepository
+	db                *sql.DB
+	postRepository    *PostRepository
+	userRepository    *UserRepository
+	imageRepository   *ImageRepository
+	commentRepository *CommentRepository
+	likeRepository    *LikeRepository
 }
 
 func New(db *sql.DB) *Store {
@@ -54,6 +55,18 @@ func (s *Store) Image() store.ImageRepository {
 	}
 
 	return s.imageRepository
+}
+
+func (s *Store) Comment() store.CommentRepository {
+	if s.commentRepository != nil {
+		return s.commentRepository
+	}
+
+	s.commentRepository = &CommentRepository{
+		Store: s,
+	}
+
+	return s.commentRepository
 }
 
 func (s *Store) Like() store.LikeRepository {

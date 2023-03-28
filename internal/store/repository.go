@@ -19,11 +19,11 @@ type UserRepository interface {
 // ImageRepository ...
 type ImageRepository interface {
 	Create(*model.Image) error
-	//FindByName(name string) (*model.Image, error)
-	//SelectImages() ([]model.Image, error)
-	//SelectUserImages(userID int) ([]model.Image, error)
-	//SelectImagesPage(page int) ([]model.Image, error)
-	//GetPostData(userID int) ([]model.Image, error)
+}
+
+// CommentRepository ...
+type CommentRepository interface {
+	Create(*model.Comment) error
 }
 
 // LikeRepository ...
