@@ -6,6 +6,7 @@ import "github.com/bemmanue/camagru/internal/model"
 type PostRepository interface {
 	Create(*model.Post) error
 	ReadPostData(userID int) ([]model.PostData, error)
+	ReadUserPostData(userID int) ([]model.PostData, error)
 }
 
 // UserRepository ...
@@ -24,6 +25,7 @@ type ImageRepository interface {
 // CommentRepository ...
 type CommentRepository interface {
 	Create(*model.Comment) error
+	GetLastComments(postID int) ([]model.Comment, error)
 }
 
 // LikeRepository ...

@@ -107,3 +107,109 @@ body {
     height: 50px;
     color: #555555;
 }
+
+
+/*Comments*/
+.comment-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+.comment_count {
+    padding-right: 5px;
+}
+
+.comments-container {
+    display: flex;
+    flex-direction: column;
+    width: 450px;
+}
+.comments {
+    display: flex;
+    flex-direction: column;
+    list-style: none;
+}
+.comment {
+    padding-bottom: 15px;
+}
+
+.leave-comment-container {
+    display: flex;
+    flex-direction: column;
+    width: 450px;
+    padding-bottom: 25px;
+    height: 50px;
+}
+.leave-comment {
+    display: flex;
+    flex-direction: column;
+}
+.comment-field {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    height: 40px;
+    border-width: 1px;
+    border-color: #CCCCCC;
+    border-radius: 15px;
+    border-style: solid;
+    width: 450px;
+}
+.comment-input {
+    border-radius: 15px;
+    font-size: 16px;
+    padding: 0 0 0 10px;
+    width: 400px;
+}
+.comment-input:focus {
+    outline:0;
+}
+.comment-button {
+    background: #FFFFFF;
+    border-radius: 15px;
+    width: 80px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #6784FF;
+}
+.comment-button:hover {
+    cursor: pointer;
+    color: #5C7AF5;
+}
+label.error {
+    padding-top: 5px;
+    padding-left: 10px;
+    font-size: 12px;
+    margin: 0;
+    color: #666666;
+}
+
+
+/*Like*/
+.like-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+.like_count {
+    padding-right: 5px;
+}
+.like_button {
+    background: #FFFFFF;
+    cursor: pointer;
+}
+.like svg {
+    fill: #F8104B;
+}
+.dislike svg {
+    fill: #888888;
+}
+.dislike svg:hover {
+    fill: #F8104B;
+}
+.like svg path {
+    d: path("M12 22c-.316-.02-.56-.147-.848-.278a23.542 23.542 0 0 1-4.781-2.942C3.777 16.705 1 13.449 1 9a6 6 0 0 1 6-6 6.183 6.183 0 0 1 5 2.568A6.183 6.183 0 0 1 17 3a6 6 0 0 1 6 6c0 4.448-2.78 7.705-5.375 9.78a23.599 23.599 0 0 1-4.78 2.942c-.543.249-.732.278-.845.278Z") !important;
+}
+.dislike svg path{
+    d: path("M12 22c-.316-.02-.56-.147-.848-.278a23.542 23.542 0 0 1-4.781-2.942C3.777 16.705 1 13.449 1 9a6 6 0 0 1 6-6 6.183 6.183 0 0 1 5 2.568A6.183 6.183 0 0 1 17 3a6 6 0 0 1 6 6c0 4.448-2.78 7.705-5.375 9.78a23.599 23.599 0 0 1-4.78 2.942c-.543.249-.732.278-.845.278ZM7 5a4 4 0 0 0-4 4c0 3.552 2.218 6.296 4.621 8.22A21.525 21.525 0 0 0 12 19.91a21.58 21.58 0 0 0 4.377-2.69C18.78 15.294 21 12.551 21 9a4 4 0 0 0-4-4c-1.957 0-3.652 1.396-4.02 3.2a1 1 0 0 1-1.96 0C10.652 6.396 8.957 5 7 5Z") !important;
+}

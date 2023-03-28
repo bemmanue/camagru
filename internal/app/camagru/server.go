@@ -7,6 +7,7 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"log"
 	"net/http"
 	"path/filepath"
 	"time"
@@ -72,6 +73,7 @@ func (s *server) configureRouter() {
 		authorized.GET("/settings", s.getSettings)
 
 		authorized.POST("/new", s.postNew)
+		authorized.POST("/comment", s.postComment)
 		authorized.POST("/like", s.postLike)
 	}
 }
@@ -245,8 +247,7 @@ func (s *server) getProfile(c *gin.Context) {
 		return
 	}
 
-	posts, err := s.store.Post().ReadPostData(userId.(int))
-	//posts, err := s.store.Post().ReadUserPostData(userId.(int))
+	posts, err := s.store.Post().ReadUserPostData(userId.(int))
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
@@ -257,6 +258,42 @@ func (s *server) getProfile(c *gin.Context) {
 
 func (s *server) getSettings(c *gin.Context) {
 	c.File("./web/templates/settings.html")
+}
+
+func (s *server) postComment(c *gin.Context) {
+	type request struct {
+		PostID  int    `json:"post_id"`
+		Comment string `json:"comment"`
+	}
+
+	var form request
+
+	err := c.BindJSON(&form)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	userId, ok := c.Get("user_id")
+	if ok == false {
+		log.Println(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"status": "no user id"})
+		return
+	}
+
+	if err := s.store.Comment().Create(&model.Comment{
+		AuthorID:     userId.(int),
+		PostID:       form.PostID,
+		CommentText:  form.Comment,
+		CreationTime: time.Now(),
+	}); err != nil {
+		log.Println(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"status": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
 
 func (s *server) postLike(c *gin.Context) {
@@ -280,17 +317,19 @@ func (s *server) postLike(c *gin.Context) {
 
 	like, err := s.store.Like().Find(form.PostID, userId.(int))
 	if err != nil {
-		err := s.store.Like().Create(&model.Like{ImageID: form.PostID, UserID: userId.(int)})
-		if err != nil {
+		if err := s.store.Like().Create(&model.Like{
+			ImageID: form.PostID,
+			UserID:  userId.(int),
+		}); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"status": err.Error()})
 			return
 		}
 	} else {
-		err := s.store.Like().Delete(like)
-		if err != nil {
+		if err := s.store.Like().Delete(like); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"status": err.Error()})
 			return
 		}
 	}
+
 	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }

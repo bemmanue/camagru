@@ -63,6 +63,59 @@ func (r *PostRepository) ReadPostData(userID int) ([]model.PostData, error) {
 
 		post.TimeSinceUpload = CountTimeSinceUpload(post.CreationTime)
 
+		if post.Comments, err = r.Store.Comment().GetLastComments(post.ID); err != nil {
+			return nil, err
+		}
+
+		posts = append(posts, post)
+	}
+
+	return posts, nil
+}
+
+// ReadUserPostData ...
+func (r *PostRepository) ReadUserPostData(userID int) ([]model.PostData, error) {
+	query := fmt.Sprintf(
+		"select posts.id, posts.image_id, posts.author_id, posts.creation_time, "+
+			"images.path, users.username, "+
+			"count(likes.id) as likes_count, "+
+			"(case when sum(case when likes.user_id = %d then 1 else 0 END) > 0 then 'like' else 'dislike' end) as user_like "+
+			"from posts join images on posts.image_id = images.id "+
+			"join users on posts.author_id = users.id "+
+			"left join likes on images.id = likes.image_id "+
+			"where posts.author_id = %d "+
+			"group by posts.id, users.username, images.path "+
+			"order by posts.creation_time desc", userID, userID)
+
+	rows, err := r.Store.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var posts []model.PostData
+	for rows.Next() {
+		post := model.PostData{}
+		if err := rows.Scan(
+			&post.ID,
+			&post.ImageID,
+			&post.AuthorID,
+			&post.CreationTime,
+			&post.ImagePath,
+			&post.Author,
+			&post.LikeCount,
+			&post.LikeStatus,
+		); err != nil {
+			return nil, err
+		}
+
+		post.TimeSinceUpload = CountTimeSinceUpload(post.CreationTime)
+
+		if post.Comments, err = r.Store.Comment().GetLastComments(post.ID); err != nil {
+			return nil, err
+		}
+
 		posts = append(posts, post)
 	}
 

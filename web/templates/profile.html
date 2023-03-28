@@ -32,7 +32,7 @@
                 <img src="{{ .ImagePath }}" class="image">
                 <div class="bottom-info">
                     <div class="comment-container">
-                        <p class="comment_count">0</p>
+                        <p class="comment_count">{{ .CommentCount }}</p>
                         <p>Comments</p>
                     </div>
                     <div class="like-container">
@@ -43,6 +43,21 @@
                             </svg>
                         </button>
                     </div>
+                </div>
+                <div class="comments-container">
+                    <ul class="comments">
+                        {{ range .Comments }}
+                        <li class="comment"><b>{{ .Author }}</b>&nbsp{{ .CommentText }}</li>
+                        {{ end }}
+                    </ul>
+                </div>
+                <div class="leave-comment-container">
+                    <form id="form_{{ .ID }}" class="leave-comment">
+                        <div class="comment-field">
+                            <input id="comment_{{ .ID }}" class="comment-input" name="comment" type="text" placeholder="Add a comment..." >
+                            <button id="button_{{ .ID }}" type="submit" class="comment-button">Post</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </li>

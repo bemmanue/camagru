@@ -49,8 +49,9 @@
                 </div>
                 <div class="comments-container">
                     <ul class="comments">
-                        <li class="comment"><b>bemmanue</b> Nice! I love you too much! Thank you! Bye bye)</li>
-                        <li class="comment"><b>dwillard</b> Good job!</li>
+                        {{ range .Comments }}
+                        <li class="comment"><b>{{ .Author }}</b>&nbsp{{ .CommentText }}</li>
+                        {{ end }}
                     </ul>
                 </div>
                 <div class="leave-comment-container">

@@ -20,8 +20,8 @@ type PostData struct {
 	ImagePath       string
 	Author          string
 	TimeSinceUpload string
-	CommentsCount   int
-	Comments        []string
+	CommentCount    int
+	Comments        []Comment
 	LikeCount       int
 	LikeStatus      string
 }
