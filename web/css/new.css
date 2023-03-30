@@ -62,23 +62,92 @@ body {
 
 /*Main*/
 .main {
-    height: 600px;
+    height: 800px;
     background-color: #FFFFFF;
     display: flex;
     align-items: center;
     justify-content: center;
 }
-.button {
-    width: 360px;
-    height: 50px;
+.post-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.edit-container {
+    display: flex;
+    flex-direction: row;
+    height: 450px;
+}
+.canvas-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 450px;
+    height: 450px;
+    background: #eeeeee;
+}
+.canvas {
+    max-width: 450px;
+    max-height: 450px;
+}
+.filters-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding-left: 20px;
+    margin: 10px;
+}
+.filter-container {
+    display: flex;
+    flex-direction: column;
+}
+.buttons-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 250px;
+    padding: 50px;
+}
+input[type=range] {
+    width: 200px;
+}
+input[type=file] {
+    display: none;
+}
+.input-label {
+    border: none;
+    display: inline-block;
+    padding: 13px 23px;
+    cursor: pointer;
+    font-size: 16px;
     background: #6784FF;
+    border-radius: 16px;
+    color: #F6F5F2;
+    text-decoration: none;
+    transition: 0.2s;
+}
+.input-label:hover {
+    background: #5C7AF5;
+}
+.button {
+    width: 100px;
+    height: 50px;
     border-radius: 16px;
     border: none;
     font-size: 16px;
     color: #F6F5F2;
     text-decoration: none;
     transition: 0.2s;
+    font-family: 'Poppins', sans-serif;
 }
-.button:hover {
+.inactive {
+    background: #a1a1a1;
+    cursor: default;
+}
+.active {
+    background: #6784FF;
+    cursor: pointer;
+}
+.active:hover {
     background: #5C7AF5;
 }

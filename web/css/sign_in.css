@@ -93,6 +93,8 @@ body {
     color: #F6F5F2;
     text-decoration: none;
     transition: 0.2s;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
 }
 .button:hover {
     background: #5C7AF5;

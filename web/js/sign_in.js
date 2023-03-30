@@ -14,8 +14,8 @@ $(document).ready(function() {
             dataType: "json",
             contentType : "application/json",
             success: function() {
-                location.replace("/feed")
                 localStorage.setItem("username", $('#username').val())
+                location.replace("/feed")
             },
             error: () => {
                 window.location.replace("/sign_in")
