@@ -13,8 +13,9 @@
     <nav class="menu">
         <a href="/" class="menu__logo">Camagru</a>
         <ul class="menu__ul">
-            <li class="menu__li"><a href="/sign_in" class="menu__link">Sign in</a></li>
-            <li class="menu__li"><a href="/sign_up" class="menu__link">Sign up</a></li>
+<!--            {{ .Authorized }}-->
+            <li class="menu__li"><a href="{{ .Link1 }}" class="menu__link">{{ .LinkName1 }}</a></li>
+            <li class="menu__li"><a href="{{ .Link2 }}" class="menu__link">{{ .LinkName2 }}</a></li>
         </ul>
     </nav>
 </header>

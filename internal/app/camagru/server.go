@@ -61,6 +61,7 @@ func (s *server) configureRouter() {
 	s.router.GET("/", s.getIndex)
 	s.router.GET("/sign_in", s.getSignIn)
 	s.router.GET("/sign_up", s.getSignUp)
+	s.router.GET("/logout", s.getLogout)
 
 	s.router.POST("/sign_in", s.postSignIn)
 	s.router.POST("/sign_up", s.postSignUp)
@@ -94,7 +95,19 @@ func AuthenticateUser() gin.HandlerFunc {
 }
 
 func (s *server) getIndex(c *gin.Context) {
-	c.File("./web/templates/index.html")
+	session := sessions.Default(c)
+	sessionID := session.Get("user_id")
+	if sessionID == nil {
+		c.HTML(http.StatusOK, "index.html", gin.H{
+			"Link1": "/sign_in", "LinkName1": "Sign in",
+			"Link2": "/sign_up", "LinkName2": "Sign up",
+		})
+	} else {
+		c.HTML(http.StatusOK, "index.html", gin.H{
+			"Link1": "/profile", "LinkName1": "Profile",
+			"Link2": "/logout", "LinkName2": "Log out",
+		})
+	}
 }
 
 func (s *server) getSignIn(c *gin.Context) {
@@ -103,6 +116,15 @@ func (s *server) getSignIn(c *gin.Context) {
 
 func (s *server) getSignUp(c *gin.Context) {
 	c.File("./web/templates/sign_up.html")
+}
+
+func (s *server) getLogout(c *gin.Context) {
+	session := sessions.Default(c)
+	session.Clear()
+	session.Save()
+	c.JSON(http.StatusOK, gin.H{
+		"message": "User Sign out successfully",
+	})
 }
 
 func (s *server) postSignIn(c *gin.Context) {
