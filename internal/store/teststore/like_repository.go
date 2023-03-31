@@ -21,7 +21,7 @@ func (r *LikeRepository) Create(l *model.Like) error {
 // Delete ...
 func (r *LikeRepository) Delete(l *model.Like) error {
 	for i, like := range r.likes {
-		if like.ImageID == l.ImageID &&
+		if like.PostID == l.PostID &&
 			like.UserID == l.UserID {
 			delete(r.likes, i)
 		}
@@ -32,7 +32,7 @@ func (r *LikeRepository) Delete(l *model.Like) error {
 // Find ...
 func (r *LikeRepository) Find(imageID, userID int) (*model.Like, error) {
 	for _, like := range r.likes {
-		if like.ImageID == imageID && like.UserID == userID {
+		if like.PostID == imageID && like.UserID == userID {
 			return like, nil
 		}
 	}

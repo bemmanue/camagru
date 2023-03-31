@@ -16,7 +16,6 @@ $(document).ready(function() {
             dataType: "json",
             contentType : "application/json",
             success: () => {
-                console.log("fail")
                 const likes = this.parentNode.querySelector(".like_count")
 
                 if (this.classList.contains("dislike")) {

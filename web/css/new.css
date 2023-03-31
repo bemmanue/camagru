@@ -63,7 +63,7 @@ body {
 /*Main*/
 .main {
     height: 800px;
-    background-color: #FFFFFF;
+    background: #FAFAFA;
     display: flex;
     align-items: center;
     justify-content: center;

@@ -5,8 +5,10 @@ import "github.com/bemmanue/camagru/internal/model"
 // PostRepository ...
 type PostRepository interface {
 	Create(*model.Post) error
-	ReadPostData(userID int) ([]model.PostData, error)
-	ReadUserPostData(userID int) ([]model.PostData, error)
+	GetPage(page, userID int) ([]model.PostData, error)
+	GetUserPage(page, userID int) ([]model.PostData, error)
+	GetPageCount() (int, error)
+	GetUserPageCount(userID int) (int, error)
 }
 
 // UserRepository ...

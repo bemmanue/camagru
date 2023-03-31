@@ -6,6 +6,10 @@ import (
 	"time"
 )
 
+const (
+	pageSize = 10
+)
+
 // PostRepository ...
 type PostRepository struct {
 	Store *Store
@@ -26,17 +30,40 @@ func (r *PostRepository) Create(p *model.Post) error {
 	return nil
 }
 
-func (r *PostRepository) ReadPostData(userID int) ([]model.PostData, error) {
+func (r *PostRepository) GetPageCount() (int, error) {
+	var count int
+	if err := r.Store.db.QueryRow(
+		"select count(*) from posts",
+	).Scan(&count); err != nil {
+		return 0, err
+	}
+	return count/pageSize + 1, nil
+}
+
+func (r *PostRepository) GetUserPageCount(userID int) (int, error) {
+	var count int
+	if err := r.Store.db.QueryRow(
+		"select count(*) from posts where author_id = $1", userID,
+	).Scan(&count); err != nil {
+		return 0, err
+	}
+	return count/pageSize + 1, nil
+}
+
+func (r *PostRepository) GetPage(page, userID int) ([]model.PostData, error) {
 	query := fmt.Sprintf(
 		"select posts.id, posts.image_id, posts.author_id, posts.creation_time, "+
 			"images.path, users.username, "+
-			"count(likes.id) as likes_count, "+
+			"count(distinct likes.id) as likes_count, "+
+			"count(distinct comments.id) as comments_count, "+
 			"(case when sum(case when likes.user_id = %d then 1 else 0 END) > 0 then 'like' else 'dislike' end) as user_like "+
 			"from posts join images on posts.image_id = images.id "+
 			"join users on posts.author_id = users.id "+
-			"left join likes on images.id = likes.image_id "+
-			"group by posts.id, users.username, images.path "+
-			"order by posts.creation_time desc", userID)
+			"left join likes on posts.id = likes.post_id "+
+			"left join comments on posts.id = comments.post_id "+
+			"group by posts.id, users.username, images.path, posts.creation_time "+
+			"order by posts.creation_time desc "+
+			"limit %d offset %d", userID, pageSize, (page-1)*pageSize)
 
 	rows, err := r.Store.db.Query(query)
 	if err != nil {
@@ -56,6 +83,7 @@ func (r *PostRepository) ReadPostData(userID int) ([]model.PostData, error) {
 			&post.ImagePath,
 			&post.Author,
 			&post.LikeCount,
+			&post.CommentCount,
 			&post.LikeStatus,
 		); err != nil {
 			return nil, err
@@ -63,6 +91,7 @@ func (r *PostRepository) ReadPostData(userID int) ([]model.PostData, error) {
 
 		post.TimeSinceUpload = CountTimeSinceUpload(post.CreationTime)
 
+		// Add post comments
 		if post.Comments, err = r.Store.Comment().GetLastComments(post.ID); err != nil {
 			return nil, err
 		}
@@ -73,19 +102,22 @@ func (r *PostRepository) ReadPostData(userID int) ([]model.PostData, error) {
 	return posts, nil
 }
 
-// ReadUserPostData ...
-func (r *PostRepository) ReadUserPostData(userID int) ([]model.PostData, error) {
+// GetUserPage ...
+func (r *PostRepository) GetUserPage(page, userID int) ([]model.PostData, error) {
 	query := fmt.Sprintf(
 		"select posts.id, posts.image_id, posts.author_id, posts.creation_time, "+
 			"images.path, users.username, "+
-			"count(likes.id) as likes_count, "+
+			"count(distinct likes.id) as likes_count, "+
+			"count(distinct comments.id) as comment_count, "+
 			"(case when sum(case when likes.user_id = %d then 1 else 0 END) > 0 then 'like' else 'dislike' end) as user_like "+
 			"from posts join images on posts.image_id = images.id "+
 			"join users on posts.author_id = users.id "+
-			"left join likes on images.id = likes.image_id "+
+			"left join likes on posts.id = likes.post_id "+
+			"left join comments on posts.id = comments.post_id "+
 			"where posts.author_id = %d "+
-			"group by posts.id, users.username, images.path "+
-			"order by posts.creation_time desc", userID, userID)
+			"group by posts.id, users.username, images.path, posts.creation_time "+
+			"order by posts.creation_time desc "+
+			"limit %d offset %d", userID, userID, pageSize, (page-1)*pageSize)
 
 	rows, err := r.Store.db.Query(query)
 	if err != nil {
@@ -105,6 +137,7 @@ func (r *PostRepository) ReadUserPostData(userID int) ([]model.PostData, error) 
 			&post.ImagePath,
 			&post.Author,
 			&post.LikeCount,
+			&post.CommentCount,
 			&post.LikeStatus,
 		); err != nil {
 			return nil, err

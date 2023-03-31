@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
+	"strconv"
 	"time"
 )
 
@@ -226,14 +227,42 @@ func (s *server) getFeed(c *gin.Context) {
 		return
 	}
 
-	posts, err := s.store.Post().ReadPostData(userId.(int))
+	page := c.DefaultQuery("page", "1")
+	pageNum, err := strconv.Atoi(page)
+	if err != nil || pageNum < 1 {
+		c.JSON(http.StatusBadRequest, gin.H{"status": "wrong page value"})
+		return
+	}
+
+	maxPageCount, err := s.store.Post().GetPageCount()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": "no user id"})
+		return
+	}
+
+	if pageNum > maxPageCount {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+
+	posts, err := s.store.Post().GetPage(pageNum, userId.(int))
 
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.HTML(http.StatusOK, "feed.html", gin.H{"Posts": posts})
+	PreviousPage := pageNum - 1
+	NextPage := pageNum + 1
+	if NextPage > maxPageCount {
+		NextPage = 0
+	}
+
+	c.HTML(http.StatusOK, "feed.html", gin.H{
+		"Posts":        posts,
+		"PreviousPage": PreviousPage,
+		"NextPage":     NextPage,
+	})
 }
 
 func (s *server) getNew(c *gin.Context) {
@@ -247,13 +276,41 @@ func (s *server) getProfile(c *gin.Context) {
 		return
 	}
 
-	posts, err := s.store.Post().ReadUserPostData(userId.(int))
+	page := c.DefaultQuery("page", "1")
+	pageNum, err := strconv.Atoi(page)
+	if err != nil || pageNum < 1 {
+		c.JSON(http.StatusBadRequest, gin.H{"status": "wrong page value"})
+		return
+	}
+
+	maxPageCount, err := s.store.Post().GetUserPageCount(userId.(int))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": "no user id"})
+		return
+	}
+
+	if pageNum > maxPageCount {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+
+	posts, err := s.store.Post().GetUserPage(pageNum, userId.(int))
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.HTML(http.StatusOK, "profile.html", gin.H{"Posts": posts})
+	PreviousPage := pageNum - 1
+	NextPage := pageNum + 1
+	if NextPage > maxPageCount {
+		NextPage = 0
+	}
+
+	c.HTML(http.StatusOK, "profile.html", gin.H{
+		"Posts":        posts,
+		"PreviousPage": PreviousPage,
+		"NextPage":     NextPage,
+	})
 }
 
 func (s *server) getSettings(c *gin.Context) {
@@ -318,8 +375,8 @@ func (s *server) postLike(c *gin.Context) {
 	like, err := s.store.Like().Find(form.PostID, userId.(int))
 	if err != nil {
 		if err := s.store.Like().Create(&model.Like{
-			ImageID: form.PostID,
-			UserID:  userId.(int),
+			PostID: form.PostID,
+			UserID: userId.(int),
 		}); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"status": err.Error()})
 			return
