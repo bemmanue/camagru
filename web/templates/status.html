@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/web/css/error.css">
+    <title>Camagru</title>
+</head>
+<body>
+<header class="header">
+    <nav class="menu">
+        <a href="/" class="menu__logo">Camagru</a>
+        <ul class="menu__ul">
+            <li class="menu__li"><a href="/sign_in" class="menu__link">Sign in</a></li>
+            <li class="menu__li"><a href="/sign_up" class="menu__link">Sign up</a></li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+    <div class="error-container">
+        <h1>{{ .Status }}</h1>
+        <p>{{ .ReasonPhrase }}</p>
+    </div>
+</main>
+</body>
+</html>

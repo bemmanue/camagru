@@ -17,10 +17,10 @@ func Start(config *Config) error {
 	store := sqlstore.New(db)
 	sessionsStore := cookie.NewStore([]byte("secret"))
 	mail := smtp.New(
-		"smtp.mail.ru:587",
 		"olivia2804@mail.ru",
-		"cSafGhJ4DceKJBZ8h76Y",
+		"3HmksFqLTfkVNcRFRJuX",
 		"smtp.mail.ru",
+		465,
 	)
 	srv := newServer(store, sessionsStore, mail)
 

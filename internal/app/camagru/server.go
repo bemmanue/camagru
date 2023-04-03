@@ -1,7 +1,6 @@
 package camagru
 
 import (
-	"errors"
 	"github.com/bemmanue/camagru/internal/mail"
 	"github.com/bemmanue/camagru/internal/model"
 	"github.com/bemmanue/camagru/internal/store"
@@ -20,11 +19,6 @@ import (
 const (
 	sessionName = "camagru"
 	imagesPath  = "data/"
-)
-
-var (
-	errIncorrectEmailOrPassword = errors.New("incorrect email or password")
-	errUnauthorized             = errors.New("unauthorized")
 )
 
 type server struct {
@@ -63,28 +57,30 @@ func (s *server) configureRouter() {
 	s.router.Static("/web", "./web")
 	s.router.Static("/data", "./data")
 
-	s.router.GET("/", s.getIndex)
-	s.router.GET("/sign_in", s.getSignIn)
-	s.router.GET("/sign_up", s.getSignUp)
-	s.router.GET("/logout", s.getLogout)
-	s.router.GET("/confirm", s.getConfirm)
-	s.router.GET("/verify", s.getVerify)
+	s.router.GET("/", s.getIndex)          // ok
+	s.router.GET("/sign_in", s.getSignIn)  // ok
+	s.router.GET("/sign_up", s.getSignUp)  // ok
+	s.router.GET("/confirm", s.getConfirm) // ok
+	s.router.GET("/verify", s.getVerify)   // ok
 
-	s.router.POST("/sign_in", s.postSignIn)
-	s.router.POST("/sign_up", s.postSignUp)
+	s.router.POST("/sign_in", s.postSignIn) // ok
+	s.router.POST("/sign_up", s.postSignUp) // ok
 
 	authorized := s.router.Group("")
 	authorized.Use(AuthenticateUser())
 	{
-		authorized.GET("/feed", s.getFeed)
-		authorized.GET("/new", s.getNew)
-		authorized.GET("/profile", s.getProfile)
-		authorized.GET("/settings", s.getSettings)
+		authorized.GET("/feed", s.getFeed)         // ok
+		authorized.GET("/new", s.getNew)           // ok
+		authorized.GET("/profile", s.getProfile)   // ok
+		authorized.GET("/settings", s.getSettings) // ok
+		authorized.GET("/logout", s.getLogout)     // ok
 
-		authorized.POST("/new", s.postNew)
-		authorized.POST("/comment", s.postComment)
+		authorized.POST("/new", s.postNew)         // ok
+		authorized.POST("/comment", s.postComment) // ok
 		authorized.POST("/like", s.postLike)
 	}
+
+	s.router.NoRoute(s.noRoute)
 }
 
 func AuthenticateUser() gin.HandlerFunc {
@@ -92,8 +88,12 @@ func AuthenticateUser() gin.HandlerFunc {
 		session := sessions.Default(c)
 		sessionID := session.Get("user_id")
 		if sessionID == nil {
-			c.HTML(http.StatusUnauthorized, "error.html", gin.H{"error": errUnauthorized.Error()})
+			c.HTML(http.StatusUnauthorized, "status.html", gin.H{
+				"Status":       http.StatusUnauthorized,
+				"ReasonPhrase": "Unauthorized",
+			})
 			c.Abort()
+			return
 		}
 
 		c.Set("user_id", sessionID.(int))
@@ -101,9 +101,11 @@ func AuthenticateUser() gin.HandlerFunc {
 	}
 }
 
+// getIndex ...
 func (s *server) getIndex(c *gin.Context) {
 	session := sessions.Default(c)
 	sessionID := session.Get("user_id")
+
 	if sessionID == nil {
 		c.HTML(http.StatusOK, "index.html", gin.H{
 			"Link1": "/sign_in", "LinkName1": "Sign in",
@@ -117,23 +119,63 @@ func (s *server) getIndex(c *gin.Context) {
 	}
 }
 
+// getSignIn ...
 func (s *server) getSignIn(c *gin.Context) {
+	session := sessions.Default(c)
+
+	session.Clear()
+
+	err := session.Save()
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "status.html", gin.H{
+			"Status":       http.StatusInternalServerError,
+			"ReasonPhrase": "Internal Server Error",
+		})
+		return
+	}
+
 	c.File("./web/templates/sign_in.html")
 }
 
+// getSignUp ...
 func (s *server) getSignUp(c *gin.Context) {
+	session := sessions.Default(c)
+
+	session.Clear()
+
+	err := session.Save()
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "status.html", gin.H{
+			"Status":       http.StatusInternalServerError,
+			"ReasonPhrase": "Internal Server Error",
+		})
+		return
+	}
+
 	c.File("./web/templates/sign_up.html")
 }
 
+// getLogout ...
 func (s *server) getLogout(c *gin.Context) {
 	session := sessions.Default(c)
 	session.Clear()
-	session.Save()
-	c.JSON(http.StatusOK, gin.H{
-		"message": "User Sign out successfully",
+
+	err := session.Save()
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "status.html", gin.H{
+			"Status":       http.StatusInternalServerError,
+			"ReasonPhrase": "Internal Server Error",
+		})
+		return
+	}
+
+	c.HTML(http.StatusOK, "index.html", gin.H{
+		"Link1": "/sign_in", "LinkName1": "Sign in",
+		"Link2": "/sign_up", "LinkName2": "Sign up",
 	})
 }
 
+// getConfirm ...
 func (s *server) getConfirm(c *gin.Context) {
 	address := c.DefaultQuery("email", "your address")
 
@@ -142,30 +184,43 @@ func (s *server) getConfirm(c *gin.Context) {
 	})
 }
 
+// getVerify ...
 func (s *server) getVerify(c *gin.Context) {
 	email := c.Query("email")
-	codes := c.Query("code")
+	codeStr := c.Query("code")
 
-	code, err := strconv.Atoi(codes)
+	code, err := strconv.Atoi(codeStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "code should be a number"})
+		c.HTML(http.StatusUnprocessableEntity, "status.html", gin.H{
+			"Status":       http.StatusUnprocessableEntity,
+			"ReasonPhrase": "Unprocessable Entity",
+		})
 		return
 	}
 
-	v, err := s.store.Verify().FindByEmail(email)
+	v, err := s.store.Verify().FindByEmail(strings.ToLower(email))
 	if err != nil {
-		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "email not found"})
+		c.HTML(http.StatusUnprocessableEntity, "status.html", gin.H{
+			"Status":       http.StatusUnprocessableEntity,
+			"ReasonPhrase": "Unprocessable Entity",
+		})
 		return
 	}
 
 	if code != v.Code {
-		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "incorrect code"})
+		c.HTML(http.StatusUnprocessableEntity, "status.html", gin.H{
+			"Status":       http.StatusUnprocessableEntity,
+			"ReasonPhrase": "Unprocessable Entity",
+		})
 		return
 	}
 
 	// update email status
 	if err := s.store.User().VerifyEmail(v.Email); err != nil {
-		c.Status(http.StatusInternalServerError)
+		c.HTML(http.StatusInternalServerError, "status.html", gin.H{
+			"Status":       http.StatusInternalServerError,
+			"ReasonPhrase": "Internal Server Error",
+		})
 		return
 	}
 
@@ -187,20 +242,20 @@ func (s *server) postSignIn(c *gin.Context) {
 		return
 	}
 
-	u, err := s.store.User().FindByUsernameVerified(form.Username)
+	u, err := s.store.User().FindByUsernameVerified(strings.ToLower(form.Username))
 	if err != nil || !u.ComparePassword(form.Password) {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": errIncorrectEmailOrPassword.Error()})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "wrong username or password"})
 		return
 	}
 
 	session := sessions.Default(c)
 	session.Set("user_id", u.ID)
 	if err = session.Save(); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"user_id": session.Get("user_id")})
+	c.JSON(http.StatusOK, gin.H{"ok": "you signed in"})
 }
 
 // postSignUp ...
@@ -227,7 +282,7 @@ func (s *server) postSignUp(c *gin.Context) {
 	}
 
 	if err := u.Validate(); err != nil {
-		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err})
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -265,30 +320,30 @@ func (s *server) postSignUp(c *gin.Context) {
 	}
 
 	if err := s.store.Verify().Create(&v); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	// send verification letter
 	if err := s.mail.Verify(v.Email, strconv.Itoa(v.Code)); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"status": "email verification needed"})
+	c.JSON(http.StatusCreated, gin.H{"ok": "email verification needed"})
 }
 
 // postNew ...
 func (s *server) postNew(c *gin.Context) {
 	file, err := c.FormFile("file")
 	if err != nil {
-		c.String(http.StatusBadRequest, "get form err: %s", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	uu, err := uuid.NewUUID()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -297,13 +352,13 @@ func (s *server) postNew(c *gin.Context) {
 	path := imagesPath + name + extension
 
 	if err := c.SaveUploadedFile(file, path); err != nil {
-		c.String(http.StatusBadRequest, "upload file err: %s", err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	userId, ok := c.Get("user_id")
 	if ok == false {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": "no user id"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
 
@@ -316,7 +371,7 @@ func (s *server) postNew(c *gin.Context) {
 	}
 
 	if err := s.store.Image().Create(i); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -327,46 +382,63 @@ func (s *server) postNew(c *gin.Context) {
 	}
 
 	if err := s.store.Post().Create(p); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	c.Header("Location", path)
-	c.JSON(http.StatusCreated, gin.H{"status": "uploaded"})
+	c.JSON(http.StatusCreated, gin.H{"ok": "created"})
 }
 
+// getFeed ...
 func (s *server) getFeed(c *gin.Context) {
 	userId, ok := c.Get("user_id")
 	if ok == false {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": "no user id"})
+		c.HTML(http.StatusInternalServerError, "status.html", gin.H{
+			"Status":       http.StatusInternalServerError,
+			"ReasonPhrase": "Internal Server Error",
+		})
 		return
 	}
 
 	page := c.DefaultQuery("page", "1")
+
 	pageNum, err := strconv.Atoi(page)
 	if err != nil || pageNum < 1 {
-		c.JSON(http.StatusBadRequest, gin.H{"status": "wrong page value"})
+		c.HTML(http.StatusNotFound, "status.html", gin.H{
+			"Status":       http.StatusNotFound,
+			"ReasonPhrase": "Not Found",
+		})
 		return
 	}
 
 	maxPageCount, err := s.store.Post().GetPageCount()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": "no user id"})
+		c.HTML(http.StatusInternalServerError, "status.html", gin.H{
+			"Status":       http.StatusInternalServerError,
+			"ReasonPhrase": "Internal Server Error",
+		})
 		return
 	}
 
 	if pageNum > maxPageCount {
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		c.HTML(http.StatusNotFound, "status.html", gin.H{
+			"Status":       http.StatusNotFound,
+			"ReasonPhrase": "Not Found",
+		})
 		return
 	}
 
 	posts, err := s.store.Post().GetPage(pageNum, userId.(int))
-
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		c.HTML(http.StatusInternalServerError, "status.html", gin.H{
+			"Status":       http.StatusInternalServerError,
+			"ReasonPhrase": "Internal Server Error",
+		})
 		return
 	}
 
+	// Calculate neighbour pages
 	PreviousPage := pageNum - 1
 	NextPage := pageNum + 1
 	if NextPage > maxPageCount {
@@ -380,21 +452,29 @@ func (s *server) getFeed(c *gin.Context) {
 	})
 }
 
+// getNew ...
 func (s *server) getNew(c *gin.Context) {
 	c.File("./web/templates/new.html")
 }
 
+// getProfile ...
 func (s *server) getProfile(c *gin.Context) {
 	userId, ok := c.Get("user_id")
 	if ok == false {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": "no user id"})
+		c.HTML(http.StatusInternalServerError, "status.html", gin.H{
+			"Status":       http.StatusInternalServerError,
+			"ReasonPhrase": "Internal Server Error",
+		})
 		return
 	}
 
 	page := c.DefaultQuery("page", "1")
 	pageNum, err := strconv.Atoi(page)
 	if err != nil || pageNum < 1 {
-		c.JSON(http.StatusBadRequest, gin.H{"status": "wrong page value"})
+		c.HTML(http.StatusNotFound, "status.html", gin.H{
+			"Status":       http.StatusNotFound,
+			"ReasonPhrase": "Not Found",
+		})
 		return
 	}
 
@@ -428,10 +508,12 @@ func (s *server) getProfile(c *gin.Context) {
 	})
 }
 
+// getSettings ...
 func (s *server) getSettings(c *gin.Context) {
 	c.File("./web/templates/settings.html")
 }
 
+// postComment ...
 func (s *server) postComment(c *gin.Context) {
 	type request struct {
 		PostID  int    `json:"post_id"`
@@ -465,9 +547,15 @@ func (s *server) postComment(c *gin.Context) {
 		return
 	}
 
+	//p, _ := s.store.Post().Find(form.PostID)
+	//
+	//
+	//s.mail.CommentNotify()
+
 	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
 
+// postLike ...
 func (s *server) postLike(c *gin.Context) {
 	type request struct {
 		PostID int `json:"post_id"`
@@ -504,4 +592,11 @@ func (s *server) postLike(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"status": "ok"})
+}
+
+func (s *server) noRoute(c *gin.Context) {
+	c.HTML(http.StatusNotFound, "status.html", gin.H{
+		"Status":       http.StatusNotFound,
+		"ReasonPhrase": "Not Found",
+	})
 }
