@@ -7,4 +7,5 @@ type Store interface {
 	Image() ImageRepository
 	Comment() CommentRepository
 	Like() LikeRepository
+	Verify() VerifyRepository
 }

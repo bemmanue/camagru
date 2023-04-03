@@ -49,10 +49,17 @@ $(document).ready(function() {
             dataType: "json",
             contentType : "application/json",
             success: () => {
-                location.href = "/confirm"
+                location.href = "/confirm?email=" + $('#email').val()
             },
-            error: () => {
-                location.href = "/sign_up"
+            error: function(response) {
+                switch (response.status) {
+                    case 422: {
+                        let error = document.getElementById("data-error")
+                        let obj = JSON.parse(response.responseText)
+
+                        error.innerText = obj.error
+                    }
+                }
             }
         });
     });

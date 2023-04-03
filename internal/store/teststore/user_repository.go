@@ -57,3 +57,48 @@ func (r *UserRepository) FindByUsername(username string) (*model.User, error) {
 
 	return nil, store.ErrRecordNotFound
 }
+
+// FindByUsernameVerified ...
+func (r *UserRepository) FindByUsernameVerified(username string) (*model.User, error) {
+	for _, user := range r.users {
+		if user.Username == username && user.EmailVerified == true {
+			return user, nil
+		}
+	}
+
+	return nil, store.ErrRecordNotFound
+}
+
+// UsernameExists ...
+func (r *UserRepository) UsernameExists(username string) (bool, error) {
+	for _, user := range r.users {
+		if user.Username == username {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+// EmailExists ...
+func (r *UserRepository) EmailExists(email string) (bool, error) {
+	for _, user := range r.users {
+		if user.Email == email {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+// VerifyEmail ...
+func (r *UserRepository) VerifyEmail(email string) error {
+	for _, user := range r.users {
+		if user.Email == email {
+			user.EmailVerified = true
+			return nil
+		}
+	}
+
+	return store.ErrRecordNotFound
+}

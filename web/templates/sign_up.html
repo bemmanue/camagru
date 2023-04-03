@@ -21,14 +21,19 @@
     </nav>
 </header>
 <main class="main">
-    <form id="form" class="form">
+    <div class="form-container" id="form-container">
         <h1 class="form_name">Sign up to Camagru</h1>
-        <div class="input"><input id="username" name="username" type="text" placeholder="Username" class="field"></div>
-        <div class="input"><input id="email" name="email" type="text" placeholder="Email" class="field"></div>
-        <div class="input"><input id="password" name="password" type="password" placeholder="Password" class="field"></div>
-        <div class="input"><input id="password_confirm" name="password_confirm" type="password" placeholder="Confirm password" class="field"></div>
-        <button type="submit" class="button">Sign up</button>
-    </form>
+        <label for="form" id="data-error"></label>
+        <form id="form" class="form">
+            <div class="inputs">
+                <div class="input"><input id="username" name="username" type="text" placeholder="Username" class="field"></div>
+                <div class="input"><input id="email" name="email" type="text" placeholder="Email" class="field"></div>
+                <div class="input"><input id="password" name="password" type="password" placeholder="Password" class="field"></div>
+                <div class="input"><input id="password_confirm" name="password_confirm" type="password" placeholder="Confirm password" class="field"></div>
+            </div>
+            <button id="button" type="submit" class="button">Sign up</button>
+        </form>
+    </div>
 </main>
 </body>
 </html>

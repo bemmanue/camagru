@@ -6,10 +6,12 @@ import (
 )
 
 type Store struct {
-	postRepository  *PostRepository
-	userRepository  *UserRepository
-	imageRepository *ImageRepository
-	likeRepository  *LikeRepository
+	postRepository    *PostRepository
+	userRepository    *UserRepository
+	imageRepository   *ImageRepository
+	commentRepository *CommentRepository
+	likeRepository    *LikeRepository
+	verifyRepository  *VerifyRepository
 }
 
 func New() *Store {
@@ -55,6 +57,19 @@ func (s *Store) Image() store.ImageRepository {
 	return s.imageRepository
 }
 
+func (s *Store) Comment() store.CommentRepository {
+	if s.commentRepository != nil {
+		return s.commentRepository
+	}
+
+	s.commentRepository = &CommentRepository{
+		store:    s,
+		comments: make(map[int]*model.Comment),
+	}
+
+	return s.commentRepository
+}
+
 func (s *Store) Like() store.LikeRepository {
 	if s.likeRepository != nil {
 		return s.likeRepository
@@ -66,4 +81,17 @@ func (s *Store) Like() store.LikeRepository {
 	}
 
 	return s.likeRepository
+}
+
+func (s *Store) Verify() store.VerifyRepository {
+	if s.verifyRepository != nil {
+		return s.verifyRepository
+	}
+
+	s.verifyRepository = &VerifyRepository{
+		store: s,
+		codes: make(map[int]*model.VerifyCode),
+	}
+
+	return s.verifyRepository
 }

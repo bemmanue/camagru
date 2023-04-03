@@ -13,6 +13,7 @@ type User struct {
 	Email             string
 	Password          string
 	EncryptedPassword string
+	EmailVerified     bool
 }
 
 // Validate ...

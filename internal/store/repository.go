@@ -17,6 +17,10 @@ type UserRepository interface {
 	Find(int) (*model.User, error)
 	FindByEmail(string) (*model.User, error)
 	FindByUsername(string) (*model.User, error)
+	FindByUsernameVerified(string) (*model.User, error)
+	UsernameExists(string) (bool, error)
+	EmailExists(string) (bool, error)
+	VerifyEmail(string) error
 }
 
 // ImageRepository ...
@@ -35,4 +39,10 @@ type LikeRepository interface {
 	Create(*model.Like) error
 	Delete(*model.Like) error
 	Find(imageID, userID int) (*model.Like, error)
+}
+
+// VerifyRepository ...
+type VerifyRepository interface {
+	Create(*model.VerifyCode) error
+	FindByEmail(string) (*model.VerifyCode, error)
 }

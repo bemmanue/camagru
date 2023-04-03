@@ -13,6 +13,7 @@ type Store struct {
 	imageRepository   *ImageRepository
 	commentRepository *CommentRepository
 	likeRepository    *LikeRepository
+	verifyRepository  *VerifyRepository
 }
 
 func New(db *sql.DB) *Store {
@@ -79,4 +80,16 @@ func (s *Store) Like() store.LikeRepository {
 	}
 
 	return s.likeRepository
+}
+
+func (s *Store) Verify() store.VerifyRepository {
+	if s.verifyRepository != nil {
+		return s.verifyRepository
+	}
+
+	s.verifyRepository = &VerifyRepository{
+		Store: s,
+	}
+
+	return s.verifyRepository
 }

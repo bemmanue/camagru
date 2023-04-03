@@ -2,15 +2,18 @@ package camagru
 
 import (
 	"errors"
+	"github.com/bemmanue/camagru/internal/mail"
 	"github.com/bemmanue/camagru/internal/model"
 	"github.com/bemmanue/camagru/internal/store"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"log"
+	"math/rand"
 	"net/http"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -28,14 +31,16 @@ type server struct {
 	router       *gin.Engine
 	store        store.Store
 	sessionStore sessions.Store
+	mail         mail.Mail
 }
 
 // newServer ...
-func newServer(store store.Store, sessionStore sessions.Store) *server {
+func newServer(store store.Store, sessionStore sessions.Store, mail mail.Mail) *server {
 	s := &server{
 		router:       gin.Default(),
 		store:        store,
 		sessionStore: sessionStore,
+		mail:         mail,
 	}
 
 	s.configureRouter()
@@ -62,6 +67,8 @@ func (s *server) configureRouter() {
 	s.router.GET("/sign_in", s.getSignIn)
 	s.router.GET("/sign_up", s.getSignUp)
 	s.router.GET("/logout", s.getLogout)
+	s.router.GET("/confirm", s.getConfirm)
+	s.router.GET("/verify", s.getVerify)
 
 	s.router.POST("/sign_in", s.postSignIn)
 	s.router.POST("/sign_up", s.postSignUp)
@@ -127,6 +134,45 @@ func (s *server) getLogout(c *gin.Context) {
 	})
 }
 
+func (s *server) getConfirm(c *gin.Context) {
+	address := c.DefaultQuery("email", "your address")
+
+	c.HTML(http.StatusOK, "confirm.html", gin.H{
+		"Address": address,
+	})
+}
+
+func (s *server) getVerify(c *gin.Context) {
+	email := c.Query("email")
+	codes := c.Query("code")
+
+	code, err := strconv.Atoi(codes)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "code should be a number"})
+		return
+	}
+
+	v, err := s.store.Verify().FindByEmail(email)
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "email not found"})
+		return
+	}
+
+	if code != v.Code {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "incorrect code"})
+		return
+	}
+
+	// update email status
+	if err := s.store.User().VerifyEmail(v.Email); err != nil {
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+
+	c.File("./web/templates/email_verified.html")
+}
+
+// postSignIn ...
 func (s *server) postSignIn(c *gin.Context) {
 	type request struct {
 		Username string `json:"username"`
@@ -141,7 +187,7 @@ func (s *server) postSignIn(c *gin.Context) {
 		return
 	}
 
-	u, err := s.store.User().FindByUsername(form.Username)
+	u, err := s.store.User().FindByUsernameVerified(form.Username)
 	if err != nil || !u.ComparePassword(form.Password) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": errIncorrectEmailOrPassword.Error()})
 		return
@@ -157,6 +203,7 @@ func (s *server) postSignIn(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"user_id": session.Get("user_id")})
 }
 
+// postSignUp ...
 func (s *server) postSignUp(c *gin.Context) {
 	type request struct {
 		Username string `json:"username"`
@@ -173,19 +220,65 @@ func (s *server) postSignUp(c *gin.Context) {
 	}
 
 	u := &model.User{
-		Username: form.Username,
-		Email:    form.Email,
-		Password: form.Password,
+		Username:      strings.ToLower(form.Username),
+		Email:         strings.ToLower(form.Email),
+		Password:      form.Password,
+		EmailVerified: false,
 	}
 
-	if err := s.store.User().Create(u); err != nil {
+	if err := u.Validate(); err != nil {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err})
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"username": form.Username, "email": form.Email, "password": form.Password})
+	// check username
+	exists, err := s.store.User().UsernameExists(u.Username)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	} else if exists == true {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Username is taken by another account."})
+		return
+	}
+
+	// check email
+	exists, err = s.store.User().EmailExists(u.Email)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	} else if exists == true {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Email is taken by another account."})
+		return
+	}
+
+	// create user
+	if err := s.store.User().Create(u); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// generate verification code and store it to database
+	v := model.VerifyCode{
+		Email:  u.Email,
+		Code:   rand.Intn(1000000),
+		UserID: u.ID,
+	}
+
+	if err := s.store.Verify().Create(&v); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": err.Error()})
+		return
+	}
+
+	// send verification letter
+	if err := s.mail.Verify(v.Email, strconv.Itoa(v.Code)); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"status": "email verification needed"})
 }
 
+// postNew ...
 func (s *server) postNew(c *gin.Context) {
 	file, err := c.FormFile("file")
 	if err != nil {

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/bemmanue/camagru/internal/model"
 	"github.com/bemmanue/camagru/internal/store/teststore"
+	"github.com/gin-contrib/sessions/cookie"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
@@ -12,7 +13,8 @@ import (
 )
 
 func TestServer_HandleIndex(t *testing.T) {
-	s := newServer(teststore.New())
+	sessionsStore := cookie.NewStore([]byte("secret"))
+	s := newServer(teststore.New(), sessionsStore)
 
 	testCases := []struct {
 		name         string
@@ -58,10 +60,12 @@ func TestServer_HandleIndex(t *testing.T) {
 }
 
 func TestServer_HandleSessionsCreate(t *testing.T) {
-	u := model.TestUser(t)
 	store := teststore.New()
+	sessionsStore := cookie.NewStore([]byte("secret"))
+	s := newServer(store, sessionsStore)
+
+	u := model.TestUser(t)
 	store.User().Create(u)
-	s := newServer(store)
 
 	testCases := []struct {
 		name         string
