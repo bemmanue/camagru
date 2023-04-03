@@ -1,11 +1,23 @@
 package teststore
 
-import "github.com/bemmanue/camagru/internal/model"
+import (
+	"github.com/bemmanue/camagru/internal/model"
+	"github.com/bemmanue/camagru/internal/store"
+)
 
 // PostRepository ...
 type PostRepository struct {
 	store *Store
 	posts map[int]*model.Post
+}
+
+func (r *PostRepository) Find(id int) (*model.Post, error) {
+	u, ok := r.posts[id]
+	if !ok {
+		return nil, store.ErrRecordNotFound
+	}
+
+	return u, nil
 }
 
 // Create ...

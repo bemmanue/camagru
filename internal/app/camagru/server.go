@@ -524,15 +524,21 @@ func (s *server) postComment(c *gin.Context) {
 
 	err := c.BindJSON(&form)
 	if err != nil {
-		log.Println(err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
+	// get comment author id
 	userId, ok := c.Get("user_id")
 	if ok == false {
-		log.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"status": "no user id"})
+		return
+	}
+
+	// get comment author
+	p, err := s.store.Post().Find(form.PostID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -542,15 +548,22 @@ func (s *server) postComment(c *gin.Context) {
 		CommentText:  form.Comment,
 		CreationTime: time.Now(),
 	}); err != nil {
-		log.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"status": err.Error()})
 		return
 	}
 
-	//p, _ := s.store.Post().Find(form.PostID)
-	//
-	//
-	//s.mail.CommentNotify()
+	// find post author
+	u, err := s.store.User().Find(p.AuthorID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": err.Error()})
+		return
+	}
+
+	// send notification letter
+	if err := s.mail.CommentNotify(u.Email); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": err.Error()})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
@@ -569,9 +582,18 @@ func (s *server) postLike(c *gin.Context) {
 		return
 	}
 
+	// get like author id
 	userId, ok := c.Get("user_id")
 	if ok == false {
+		log.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"status": "no user id"})
+		return
+	}
+
+	// get like author
+	p, err := s.store.Post().Find(form.PostID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -581,14 +603,31 @@ func (s *server) postLike(c *gin.Context) {
 			PostID: form.PostID,
 			UserID: userId.(int),
 		}); err != nil {
+			log.Println(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"status": err.Error()})
 			return
 		}
 	} else {
 		if err := s.store.Like().Delete(like); err != nil {
+			log.Println(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"status": err.Error()})
 			return
 		}
+	}
+
+	// find post author
+	u, err := s.store.User().Find(p.AuthorID)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"status": err.Error()})
+		return
+	}
+
+	// send notification letter
+	if err := s.mail.LikeNotify(u.Email); err != nil {
+		log.Println(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"status": err.Error()})
+		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"status": "ok"})

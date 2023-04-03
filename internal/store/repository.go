@@ -4,6 +4,7 @@ import "github.com/bemmanue/camagru/internal/model"
 
 // PostRepository ...
 type PostRepository interface {
+	Find(int) (*model.Post, error)
 	Create(*model.Post) error
 	GetPage(page, userID int) ([]model.PostData, error)
 	GetUserPage(page, userID int) ([]model.PostData, error)

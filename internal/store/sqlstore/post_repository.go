@@ -1,8 +1,10 @@
 package sqlstore
 
 import (
+	"database/sql"
 	"fmt"
 	"github.com/bemmanue/camagru/internal/model"
+	"github.com/bemmanue/camagru/internal/store"
 	"time"
 )
 
@@ -13,6 +15,26 @@ const (
 // PostRepository ...
 type PostRepository struct {
 	Store *Store
+}
+
+func (r *PostRepository) Find(id int) (*model.Post, error) {
+	p := &model.Post{}
+	if err := r.Store.db.QueryRow(
+		"select id, image_id, author_id, creation_time from posts where id  = $1",
+		id,
+	).Scan(
+		&p.ID,
+		&p.ImageID,
+		&p.AuthorID,
+		&p.CreationTime,
+	); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, store.ErrRecordNotFound
+		}
+
+		return nil, err
+	}
+	return p, nil
 }
 
 // Create ...

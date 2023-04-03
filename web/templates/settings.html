@@ -2,10 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="/web/css/settings.css">
+<!--    <link rel="stylesheet" href="/web/css/settings.css">-->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@200;400&family=Sawarabi+Gothic&display=swap" rel="stylesheet">
+    <script src="/web/js/jquery.js"></script>
+    <script src="/web/js/settings.js" defer></script>
     <title>Camagru</title>
 </head>
 <body>
@@ -21,7 +23,22 @@
     </nav>
 </header>
 <main class="main">
-    <button class="button">Какие то уведомления</button>
+    <div class="settings-container">
+        <div class="notify-container">
+            <p>Get notifications for likes</p>
+            <label class="switch">
+                <input type="checkbox" id="like-notify">
+                <span class="slider round"></span>
+            </label>
+        </div>
+        <div class="notify-container">
+            <p>Get notifications for comments</p>
+            <label class="switch">
+                <input type="checkbox" id="comment-notify">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div>
 </main>
 </body>
 </html>
