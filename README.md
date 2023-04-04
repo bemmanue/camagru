@@ -8,32 +8,27 @@ Welcome to Camagru! This is Instagram-like web application allowing users to cre
 - Backend: Golang
 - Frontend: HTML, CSS, JavaScript
 - Database: PostgreSQL
-- Message broker: Kafka
-- Containerization: Docker-Compose, Kubernetes
 
 ---
 
-### Common features:
-- Microservice architecture
-
-[//]: # (---)
-
 ### User features:
 - Sign up with email verification
-- Ssign in by email and password
-- Reset password by email
-- Update profile information
+- Sign in by email and password
 - Change user preferences
+
+[//]: # (- Reset password by email)
+[//]: # (- Update profile information)
+
 
 [//]: # (---)
 
 ### Gallery features:
-- Display all the images edited by all the users, ordered by date of creation
+- Display all the images edited by all users, ordered by date of creation
 - Like and comment posts
-- Get notifications about new comments by email
+- Get notifications about new comments and likes by email
 
 [//]: # (---)
 
 ### Editig features:
-- Upload image or capture it using a webcam
+- Upload image and apply filters to it
 - Delete images
