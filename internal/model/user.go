@@ -14,6 +14,8 @@ type User struct {
 	Password          string
 	EncryptedPassword string
 	EmailVerified     bool
+	LikeNotify        bool
+	CommentNotify     bool
 }
 
 // Validate ...

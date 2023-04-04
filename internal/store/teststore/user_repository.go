@@ -102,3 +102,27 @@ func (r *UserRepository) VerifyEmail(email string) error {
 
 	return store.ErrRecordNotFound
 }
+
+// UpdateLikeNotify ...
+func (r *UserRepository) UpdateLikeNotify(id int, value bool) error {
+	u, ok := r.users[id]
+	if !ok {
+		return store.ErrRecordNotFound
+	}
+	
+	u.LikeNotify = value
+
+	return nil
+}
+
+// UpdateCommentNotify ...
+func (r *UserRepository) UpdateCommentNotify(id int, value bool) error {
+	u, ok := r.users[id]
+	if !ok {
+		return store.ErrRecordNotFound
+	}
+
+	u.CommentNotify = value
+
+	return nil
+}

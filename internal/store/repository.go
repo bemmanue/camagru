@@ -5,6 +5,7 @@ import "github.com/bemmanue/camagru/internal/model"
 // PostRepository ...
 type PostRepository interface {
 	Find(int) (*model.Post, error)
+	Delete(int) error
 	Create(*model.Post) error
 	GetPage(page, userID int) ([]model.PostData, error)
 	GetUserPage(page, userID int) ([]model.PostData, error)
@@ -22,17 +23,21 @@ type UserRepository interface {
 	UsernameExists(string) (bool, error)
 	EmailExists(string) (bool, error)
 	VerifyEmail(string) error
+	UpdateLikeNotify(id int, value bool) error
+	UpdateCommentNotify(id int, value bool) error
 }
 
 // ImageRepository ...
 type ImageRepository interface {
 	Create(*model.Image) error
+	Find(int) (*model.Image, error)
 }
 
 // CommentRepository ...
 type CommentRepository interface {
 	Create(*model.Comment) error
 	GetLastComments(postID int) ([]model.Comment, error)
+	DeleteByPostID(int) error
 }
 
 // LikeRepository ...
@@ -40,6 +45,7 @@ type LikeRepository interface {
 	Create(*model.Like) error
 	Delete(*model.Like) error
 	Find(imageID, userID int) (*model.Like, error)
+	DeleteByPostID(int) error
 }
 
 // VerifyRepository ...

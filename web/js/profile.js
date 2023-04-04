@@ -2,10 +2,23 @@ const form = $(".leave-comment");
 
 $(document).ready(function() {
 
-    $(".like_button").click(function(e) {
-        e.preventDefault();
+    $(".delete-button").click(function(e) {
+        e.preventDefault()
 
         console.log(this.closest(".post").id)
+
+        $.ajax({
+            type: "DELETE",
+            url: "/profile/" + this.closest(".post").id,
+            success: () => {
+                location.replace("/profile")
+            },
+            error: () => {}
+        });
+    });
+
+    $(".like_button").click(function(e) {
+        e.preventDefault()
 
         $.ajax({
             type: "POST",

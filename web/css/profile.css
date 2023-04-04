@@ -109,6 +109,21 @@ body {
 }
 
 
+/*Delete*/
+.delete-container {
+    width: 60px;
+    padding-top: 5px;
+}
+.delete-button {
+    background: #FFFFFF;
+    fill: #888888;
+}
+.delete-button:hover {
+    cursor: pointer;
+    fill: #F8104B;
+}
+
+
 /*Comments*/
 .comment-container {
     display: flex;

@@ -66,3 +66,15 @@ func (r *CommentRepository) GetLastComments(postID int) ([]model.Comment, error)
 
 	return comments, nil
 }
+
+// DeleteByPostID ...
+func (r *CommentRepository) DeleteByPostID(postID int) error {
+	if err := r.Store.db.QueryRow(
+		"delete from comments where post_id = $1",
+		postID,
+	); err != nil {
+		return err.Err()
+	}
+
+	return nil
+}

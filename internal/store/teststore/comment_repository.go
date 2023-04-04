@@ -24,3 +24,13 @@ func (r *CommentRepository) GetLastComments(postID int) ([]model.Comment, error)
 	}
 	return comments, nil
 }
+
+// DeleteByPostID ...
+func (r *CommentRepository) DeleteByPostID(postID int) error {
+	for id, comment := range r.comments {
+		if comment.PostID == postID {
+			delete(r.comments, id)
+		}
+	}
+	return nil
+}

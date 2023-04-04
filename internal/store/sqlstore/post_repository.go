@@ -199,3 +199,13 @@ func CountTimeSinceUpload(uploadTime time.Time) string {
 	}
 	return result
 }
+
+func (r *PostRepository) Delete(id int) error {
+	if err := r.Store.db.QueryRow("delete from posts where id  = $1",
+		id,
+	); err != nil {
+		return err.Err()
+	}
+
+	return nil
+}

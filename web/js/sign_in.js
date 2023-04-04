@@ -18,7 +18,7 @@ $(document).ready(function() {
                 location.replace("/feed")
             },
             error: () => {
-                window.location.replace("/sign_in")
+                location.replace("/sign_in")
             },
         });
     });

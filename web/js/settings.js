@@ -3,10 +3,38 @@ $(document).ready(function() {
     let like_notify = document.getElementById("like-notify")
 
     comment_notify.addEventListener("change", function () {
-        console.log($(comment_notify).val())
+        let value = $(comment_notify).is(':checked')
+
+        $.ajax({
+            type: "POST",
+            url: "/settings",
+            data: JSON.stringify({
+                "comment_notify" : value,
+            }),
+            dataType: "json",
+            contentType : "application/json",
+            success: function() {
+            },
+            error: function() {
+            },
+        })
     })
 
     like_notify.addEventListener("change", function () {
-        console.log($(like_notify).val())
+        let value = $(like_notify).is(':checked')
+
+        $.ajax({
+            type: "POST",
+            url: "/settings",
+            data: JSON.stringify({
+                "like_notify" : value,
+            }),
+            dataType: "json",
+            contentType : "application/json",
+            success: function() {
+            },
+            error: function() {
+            },
+        })
     })
 })

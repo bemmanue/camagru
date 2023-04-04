@@ -44,3 +44,9 @@ func (r *PostRepository) GetPageCount() (int, error) {
 func (r *PostRepository) GetUserPageCount(userID int) (int, error) {
 	return 1, nil
 }
+
+func (r *PostRepository) Delete(id int) error {
+	delete(r.posts, id)
+
+	return nil
+}

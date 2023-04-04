@@ -55,3 +55,15 @@ func (r *LikeRepository) Find(imageID, userID int) (*model.Like, error) {
 	}
 	return like, nil
 }
+
+// DeleteByPostID ...
+func (r *LikeRepository) DeleteByPostID(postID int) error {
+	if err := r.Store.db.QueryRow(
+		"delete from likes where post_id = $1",
+		postID,
+	); err != nil {
+		return err.Err()
+	}
+
+	return nil
+}

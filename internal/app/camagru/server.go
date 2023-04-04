@@ -7,9 +7,9 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"log"
 	"math/rand"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -57,27 +57,30 @@ func (s *server) configureRouter() {
 	s.router.Static("/web", "./web")
 	s.router.Static("/data", "./data")
 
-	s.router.GET("/", s.getIndex)          // ok
-	s.router.GET("/sign_in", s.getSignIn)  // ok
-	s.router.GET("/sign_up", s.getSignUp)  // ok
-	s.router.GET("/confirm", s.getConfirm) // ok
-	s.router.GET("/verify", s.getVerify)   // ok
+	s.router.GET("/", s.getIndex)
+	s.router.GET("/sign_in", s.getSignIn)
+	s.router.GET("/sign_up", s.getSignUp)
+	s.router.GET("/confirm", s.getConfirm)
+	s.router.GET("/verify", s.getVerify)
 
-	s.router.POST("/sign_in", s.postSignIn) // ok
-	s.router.POST("/sign_up", s.postSignUp) // ok
+	s.router.POST("/sign_in", s.postSignIn)
+	s.router.POST("/sign_up", s.postSignUp)
 
 	authorized := s.router.Group("")
 	authorized.Use(AuthenticateUser())
 	{
-		authorized.GET("/feed", s.getFeed)         // ok
-		authorized.GET("/new", s.getNew)           // ok
-		authorized.GET("/profile", s.getProfile)   // ok
-		authorized.GET("/settings", s.getSettings) // ok
-		authorized.GET("/logout", s.getLogout)     // ok
+		authorized.GET("/feed", s.getFeed)
+		authorized.GET("/new", s.getNew)
+		authorized.GET("/profile", s.getProfile)
+		authorized.GET("/settings", s.getSettings)
+		authorized.GET("/logout", s.getLogout)
 
-		authorized.POST("/new", s.postNew)         // ok
-		authorized.POST("/comment", s.postComment) // ok
+		authorized.POST("/new", s.postNew)
+		authorized.POST("/comment", s.postComment)
 		authorized.POST("/like", s.postLike)
+		authorized.POST("/settings", s.postSettings)
+
+		authorized.DELETE("/profile/:post_id", s.deletePost)
 	}
 
 	s.router.NoRoute(s.noRoute)
@@ -480,18 +483,27 @@ func (s *server) getProfile(c *gin.Context) {
 
 	maxPageCount, err := s.store.Post().GetUserPageCount(userId.(int))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": "no user id"})
+		c.HTML(http.StatusInternalServerError, "status.html", gin.H{
+			"Status":       http.StatusInternalServerError,
+			"ReasonPhrase": "Internal Server Error",
+		})
 		return
 	}
 
 	if pageNum > maxPageCount {
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		c.HTML(http.StatusNotFound, "status.html", gin.H{
+			"Status":       http.StatusNotFound,
+			"ReasonPhrase": "Not Found",
+		})
 		return
 	}
 
 	posts, err := s.store.Post().GetUserPage(pageNum, userId.(int))
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		c.HTML(http.StatusNotFound, "status.html", gin.H{
+			"Status":       http.StatusNotFound,
+			"ReasonPhrase": "Not Found",
+		})
 		return
 	}
 
@@ -510,7 +522,28 @@ func (s *server) getProfile(c *gin.Context) {
 
 // getSettings ...
 func (s *server) getSettings(c *gin.Context) {
-	c.File("./web/templates/settings.html")
+	// get user id
+	userID, ok := c.Get("user_id")
+	if ok == false {
+		c.HTML(http.StatusInternalServerError, "status.html", gin.H{
+			"Status":       http.StatusNotFound,
+			"ReasonPhrase": "Not Found",
+		})
+		return
+	}
+
+	u, err := s.store.User().Find(userID.(int))
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "status.html", gin.H{
+			"Status":       http.StatusNotFound,
+			"ReasonPhrase": "Not Found",
+		})
+	}
+
+	c.HTML(http.StatusOK, "settings.html", gin.H{
+		"LikeNotify":    u.LikeNotify,
+		"CommentNotify": u.CommentNotify,
+	})
 }
 
 // postComment ...
@@ -535,7 +568,7 @@ func (s *server) postComment(c *gin.Context) {
 		return
 	}
 
-	// get comment author
+	// get commented post
 	p, err := s.store.Post().Find(form.PostID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -552,6 +585,13 @@ func (s *server) postComment(c *gin.Context) {
 		return
 	}
 
+	// find comment author
+	commentAuthor, err := s.store.User().Find(p.AuthorID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": err.Error()})
+		return
+	}
+
 	// find post author
 	u, err := s.store.User().Find(p.AuthorID)
 	if err != nil {
@@ -560,9 +600,11 @@ func (s *server) postComment(c *gin.Context) {
 	}
 
 	// send notification letter
-	if err := s.mail.CommentNotify(u.Email); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": err.Error()})
-		return
+	if u.CommentNotify == true {
+		if err := s.mail.CommentNotify(u.Email, commentAuthor.Username); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"status": err.Error()})
+			return
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{"status": "ok"})
@@ -585,7 +627,6 @@ func (s *server) postLike(c *gin.Context) {
 	// get like author id
 	userId, ok := c.Get("user_id")
 	if ok == false {
-		log.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"status": "no user id"})
 		return
 	}
@@ -603,31 +644,36 @@ func (s *server) postLike(c *gin.Context) {
 			PostID: form.PostID,
 			UserID: userId.(int),
 		}); err != nil {
-			log.Println(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"status": err.Error()})
 			return
 		}
 	} else {
 		if err := s.store.Like().Delete(like); err != nil {
-			log.Println(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"status": err.Error()})
 			return
 		}
 	}
 
+	// find like author
+	likeAuthor, err := s.store.User().Find(p.AuthorID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": err.Error()})
+		return
+	}
+
 	// find post author
 	u, err := s.store.User().Find(p.AuthorID)
 	if err != nil {
-		log.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"status": err.Error()})
 		return
 	}
 
 	// send notification letter
-	if err := s.mail.LikeNotify(u.Email); err != nil {
-		log.Println(err)
-		c.JSON(http.StatusInternalServerError, gin.H{"status": err.Error()})
-		return
+	if u.LikeNotify == true {
+		if err := s.mail.LikeNotify(u.Email, likeAuthor.Username); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"status": err.Error()})
+			return
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{"status": "ok"})
@@ -638,4 +684,86 @@ func (s *server) noRoute(c *gin.Context) {
 		"Status":       http.StatusNotFound,
 		"ReasonPhrase": "Not Found",
 	})
+}
+
+func (s *server) postSettings(c *gin.Context) {
+	likeNotify := c.Query("like_notify")
+	commentNotify := c.Query("comment_notify")
+
+	// get user id
+	userId, ok := c.Get("user_id")
+	if ok == false {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": "no user id"})
+		return
+	}
+
+	value, err := strconv.ParseBool(likeNotify)
+	if err != nil {
+		err := s.store.User().UpdateLikeNotify(userId.(int), value)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+			return
+		}
+	}
+
+	value, err = strconv.ParseBool(commentNotify)
+	if err != nil {
+		err := s.store.User().UpdateCommentNotify(userId.(int), value)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"ok": "ok"})
+}
+
+func (s *server) deletePost(c *gin.Context) {
+	post_id := c.Param("post_id")
+
+	postID, err := strconv.Atoi(post_id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "wrong post identifier"})
+		return
+	}
+
+	// find post data
+	p, err := s.store.Post().Find(postID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "wrong post identifier"})
+		return
+	}
+
+	// fund user image data
+	i, err := s.store.Image().Find(p.ImageID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+
+	// remove user image
+	if err := os.RemoveAll(i.Path); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+
+	// remove records from post database
+	if err := s.store.Post().Delete(postID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+
+	// remove comments to related post
+	if err := s.store.Comment().DeleteByPostID(postID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+
+	// remove likes to related post
+	if err := s.store.Like().DeleteByPostID(postID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+
+	c.JSON(http.StatusNoContent, gin.H{"ok": "no content"})
 }

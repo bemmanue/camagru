@@ -33,13 +33,15 @@ func (r *UserRepository) Create(u *model.User) error {
 func (r *UserRepository) Find(id int) (*model.User, error) {
 	u := &model.User{}
 	if err := r.Store.db.QueryRow(
-		"select id, username, email, encrypted_password from users where id  = $1",
+		"select id, username, email, encrypted_password, like_notify, comment_notify from users where id  = $1",
 		id,
 	).Scan(
 		&u.ID,
 		&u.Username,
 		&u.Email,
 		&u.EncryptedPassword,
+		&u.LikeNotify,
+		&u.CommentNotify,
 	); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, store.ErrRecordNotFound
@@ -54,13 +56,15 @@ func (r *UserRepository) Find(id int) (*model.User, error) {
 func (r *UserRepository) FindByUsername(username string) (*model.User, error) {
 	u := &model.User{}
 	if err := r.Store.db.QueryRow(
-		"select id, username, email, encrypted_password from users where username  = $1",
+		"select id, username, email, encrypted_password, like_notify, comment_notify from users where username  = $1",
 		username,
 	).Scan(
 		&u.ID,
 		&u.Username,
 		&u.Email,
 		&u.EncryptedPassword,
+		&u.LikeNotify,
+		&u.CommentNotify,
 	); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, store.ErrRecordNotFound
@@ -75,13 +79,15 @@ func (r *UserRepository) FindByUsername(username string) (*model.User, error) {
 func (r *UserRepository) FindByUsernameVerified(username string) (*model.User, error) {
 	u := &model.User{}
 	if err := r.Store.db.QueryRow(
-		"select id, username, email, encrypted_password from users where username  = $1 and email_verified = true",
+		"select id, username, email, encrypted_password, like_notify, comment_notify from users where username  = $1 and email_verified = true",
 		username,
 	).Scan(
 		&u.ID,
 		&u.Username,
 		&u.Email,
 		&u.EncryptedPassword,
+		&u.LikeNotify,
+		&u.CommentNotify,
 	); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, store.ErrRecordNotFound
@@ -96,13 +102,15 @@ func (r *UserRepository) FindByUsernameVerified(username string) (*model.User, e
 func (r *UserRepository) FindByEmail(email string) (*model.User, error) {
 	u := &model.User{}
 	if err := r.Store.db.QueryRow(
-		"select id, username, email, encrypted_password from users where email  = $1",
+		"select id, username, email, encrypted_password, like_notify, comment_notify from users where email  = $1",
 		email,
 	).Scan(
 		&u.ID,
 		&u.Username,
 		&u.Email,
 		&u.EncryptedPassword,
+		&u.LikeNotify,
+		&u.CommentNotify,
 	); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, store.ErrRecordNotFound
@@ -147,6 +155,26 @@ func (r *UserRepository) EmailExists(email string) (bool, error) {
 func (r *UserRepository) VerifyEmail(email string) error {
 	if err := r.Store.db.QueryRow(
 		"update users set email_verified = true where email = $1", email,
+	); err != nil {
+		return err.Err()
+	}
+	return nil
+}
+
+// UpdateLikeNotify ...
+func (r *UserRepository) UpdateLikeNotify(id int, value bool) error {
+	if err := r.Store.db.QueryRow(
+		"update users set like_notify = $1 where id = $2", value, id,
+	); err != nil {
+		return err.Err()
+	}
+	return nil
+}
+
+// UpdateCommentNotify ...
+func (r *UserRepository) UpdateCommentNotify(id int, value bool) error {
+	if err := r.Store.db.QueryRow(
+		"update users set comment_notify = $1 where id = $2", value, id,
 	); err != nil {
 		return err.Err()
 	}

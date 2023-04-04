@@ -38,3 +38,13 @@ func (r *LikeRepository) Find(imageID, userID int) (*model.Like, error) {
 	}
 	return nil, store.ErrRecordNotFound
 }
+
+// DeleteByPostID ...
+func (r *LikeRepository) DeleteByPostID(postID int) error {
+	for id, like := range r.likes {
+		if like.PostID == postID {
+			delete(r.likes, id)
+		}
+	}
+	return nil
+}

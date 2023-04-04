@@ -78,13 +78,13 @@ func (m *Mail) Verify(email, code string) error {
 }
 
 // CommentNotify ...
-func (m *Mail) CommentNotify(email string) error {
+func (m *Mail) CommentNotify(email, user string) error {
 	var body bytes.Buffer
 
 	data := struct {
 		User string
 	}{
-		User: "user",
+		User: user,
 	}
 
 	if err := m.commentNotifyTmpl.Execute(&body, data); err != nil {
@@ -107,13 +107,13 @@ func (m *Mail) CommentNotify(email string) error {
 }
 
 // LikeNotify ...
-func (m *Mail) LikeNotify(email string) error {
+func (m *Mail) LikeNotify(email, user string) error {
 	var body bytes.Buffer
 
 	data := struct {
 		User string
 	}{
-		User: "user",
+		User: user,
 	}
 
 	if err := m.likeNotifyTmpl.Execute(&body, data); err != nil {
