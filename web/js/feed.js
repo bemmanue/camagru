@@ -5,8 +5,6 @@ $(document).ready(function() {
     $(".like_button").click(function(e) {
         e.preventDefault();
 
-       console.log(this.closest(".post").id)
-
         $.ajax({
             type: "POST",
             url: "/like",
@@ -27,9 +25,7 @@ $(document).ready(function() {
                 this.classList.toggle("dislike")
                 this.classList.toggle("like")
             },
-            error: () => {
-
-            }
+            error: () => {}
         });
     });
 
@@ -63,6 +59,9 @@ $(document).ready(function() {
                     success: () => {
                         let ul = data.parentNode.parentNode.querySelector('.comments')
 
+                        let commentCount = data.parentNode.parentNode.querySelector(".comment_count")
+                        commentCount.innerHTML = (parseInt(commentCount.innerHTML) + 1).toString()
+
                         let b = document.createElement("b");
                         b.appendChild(document.createTextNode(localStorage.getItem("username")));
 
@@ -73,12 +72,8 @@ $(document).ready(function() {
                         li.appendChild(document.createTextNode(comment_text));
 
                         ul.appendChild(li)
-
-                        console.log(ul)
                     },
-                    error: () => {
-
-                    },
+                    error: () => {},
                 });
             }
         })
