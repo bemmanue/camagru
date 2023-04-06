@@ -86,6 +86,7 @@ func (s *server) configureRouter() {
 	s.router.NoRoute(s.noRoute)
 }
 
+// AuthenticateUser ...
 func AuthenticateUser() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		session := sessions.Default(c)

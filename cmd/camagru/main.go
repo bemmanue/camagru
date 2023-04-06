@@ -1,29 +1,24 @@
 package main
 
 import (
-	"flag"
-	"github.com/BurntSushi/toml"
 	"github.com/bemmanue/camagru/internal/app/camagru"
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"log"
 )
 
-var (
-	configPath string
-)
-
 func init() {
-	flag.StringVar(&configPath, "config-path", "config/camagru.toml", "path to config file")
+	if err := godotenv.Load(); err != nil {
+		log.Fatalln("no .env file found")
+	}
 }
 
 func main() {
-	flag.Parse()
-
-	config := camagru.NewConfig()
-	_, err := toml.DecodeFile(configPath, config)
+	config, err := camagru.NewConfig()
 	if err != nil {
 		log.Fatalln(err)
 	}
+	log.Println(config)
 
 	if err := camagru.Start(config); err != nil {
 		log.Fatalln(err)
