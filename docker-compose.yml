@@ -1,0 +1,50 @@
+version: "3.9"
+services:
+  database:
+    image: postgres:latest
+    container_name: postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    networks:
+      camagru-network:
+        aliases:
+          - database
+    ports:
+      - "5432:5432"
+    volumes:
+      - data:/var/lib/postgresql/data
+
+  migrate:
+    container_name: migrate
+    depends_on:
+      - database
+    image: migrate/migrate
+    networks:
+      - camagru-network
+    volumes:
+      - ./migrations:/migrations
+    command: [ "-path", "/migrations", "-database", "postgres://postgres:hello@database/camagru?sslmode=disable", "up" ]
+    restart: on-failure
+
+  web:
+    build: .
+    container_name: web
+    depends_on:
+      - migrate
+    networks:
+      - camagru-network
+    ports:
+      - "8080:8080"
+    volumes:
+      - web:/usr/src/camagru
+    command: go run cmd/camagru/main.go
+
+volumes:
+  data:
+  web:
+
+networks:
+  camagru-network:
