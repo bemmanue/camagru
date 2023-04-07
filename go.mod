@@ -3,7 +3,6 @@ module github.com/bemmanue/camagru
 go 1.20
 
 require (
-	github.com/BurntSushi/toml v1.2.1
 	github.com/gin-contrib/sessions v0.0.5
 	github.com/gin-gonic/gin v1.9.0
 	github.com/go-ozzo/ozzo-validation v3.6.0+incompatible
