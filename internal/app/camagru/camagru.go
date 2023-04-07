@@ -33,10 +33,11 @@ func Start(config *Config) error {
 
 func newDB(config DatabaseConfig) (*sql.DB, error) {
 	databaseURL := fmt.Sprintf(
-		"host=%s port=%d user=%s dbname=%s sslmode=%s",
+		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
 		config.Host,
 		config.Port,
 		config.User,
+		config.Password,
 		config.Name,
 		config.SSLMode,
 	)
