@@ -17,11 +17,12 @@ type SMTPConfig struct {
 
 // DatabaseConfig ...
 type DatabaseConfig struct {
-	Host    string
-	Port    int
-	User    string
-	Name    string
-	SSLMode string
+	Host     string
+	Port     int
+	User     string
+	Password string
+	Name     string
+	SSLMode  string
 }
 
 // Config ...
@@ -117,24 +118,30 @@ func NewDatabaseConfig() (*DatabaseConfig, error) {
 
 	user, exists := os.LookupEnv("DB_USER")
 	if !exists {
-		return nil, errors.New("HOST not found")
+		return nil, errors.New("DB_USER not found")
+	}
+
+	password, exists := os.LookupEnv("DB_PASSWORD")
+	if !exists {
+		return nil, errors.New("DB_PASSWORD not found")
 	}
 
 	name, exists := os.LookupEnv("DB_NAME")
 	if !exists {
-		return nil, errors.New("PORT not found")
+		return nil, errors.New("DB_NAME not found")
 	}
 
 	sslMode, exists := os.LookupEnv("DB_SSLMODE")
 	if !exists {
-		return nil, errors.New("PORT not found")
+		return nil, errors.New("DB_SSLMODE not found")
 	}
 
 	return &DatabaseConfig{
-		Host:    host,
-		Port:    port,
-		User:    user,
-		Name:    name,
-		SSLMode: sslMode,
+		Host:     host,
+		Port:     port,
+		User:     user,
+		Password: password,
+		Name:     name,
+		SSLMode:  sslMode,
 	}, nil
 }
