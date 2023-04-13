@@ -33,14 +33,23 @@ func Start(config *Config) error {
 
 func newDB(config DatabaseConfig) (*sql.DB, error) {
 	databaseURL := fmt.Sprintf(
-		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
-		config.Host,
+		"host=localhost port=%d user=%s dbname=%s sslmode=%s",
 		config.Port,
 		config.User,
-		config.Password,
 		config.Name,
 		config.SSLMode,
 	)
+
+	// for database container
+	//databaseURL := fmt.Sprintf(
+	//	"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
+	//	config.Host,
+	//	config.Port,
+	//	config.User,
+	//	config.Password,
+	//	config.Name,
+	//	config.SSLMode,
+	//)
 	db, err := sql.Open("postgres", databaseURL)
 	if err != nil {
 		return nil, err
