@@ -1,7 +1,8 @@
 create table comments (
                           id              bigserial not null primary key,
                           author_id       bigserial not null,
-                          text            varchar not null,
+                          post_id         bigserial not null,
+                          comment_text    varchar not null,
                           creation_time   timestamp with time zone not null
 );
 
@@ -16,7 +17,7 @@ create table images (
 
 create table likes (
                        id              bigserial not null primary key,
-                       image_id        bigserial not null,
+                       post_id         bigserial not null,
                        user_id         bigserial not null
 );
 
