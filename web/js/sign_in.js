@@ -17,8 +17,11 @@ $(document).ready(function() {
                 localStorage.setItem("username", $('#username').val())
                 location.replace("/feed")
             },
-            error: () => {
-                location.replace("/sign_in")
+            error: function(response) {
+                let error = document.getElementById("data-error")
+                let obj = JSON.parse(response.responseText)
+
+                error.innerText = obj.error
             },
         });
     });

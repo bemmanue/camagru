@@ -20,12 +20,17 @@
     </nav>
 </header>
 <main class="main">
-    <form id="form" class="form">
+    <div class="form-container" id="form-container">
         <h1 class="form_name">Sign in to Camagru</h1>
-        <input id="username" name="username" type="text" placeholder="Username" class="field">
-        <input id="password" name="password" type="password" placeholder="Password" class="field">
-        <button type="submit" class="button">Sign in</button>
-    </form>
+        <label for="form" id="data-error"></label>
+        <form id="form" class="form">
+            <div class="inputs">
+                <div class="input"><input id="username" name="username" type="text" placeholder="Username" class="field"></div>
+                <div class="input"><input id="password" name="password" type="password" placeholder="Password" class="field"></div>
+            </div>
+            <button type="submit" class="button">Sign in</button>
+        </form>
+    </div>
 </main>
 </body>
 </html>
