@@ -1,13 +1,16 @@
 version: "3.9"
+
 services:
+
   database:
-    image: postgres:latest
+    image: postgres:15.2
     container_name: postgres
+    hostname: database
     restart: always
     environment:
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-      - POSTGRES_DB=${DB_NAME}
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     networks:
       camagru-network:
         aliases:
@@ -26,21 +29,8 @@ services:
       - camagru-network
     volumes:
       - ./migrations:/migrations
-    command: [ "-path", "/migrations", "-database", "postgres://postgres:hello@database/camagru?sslmode=disable", "up" ]
+    command: [ "-path", "/migrations", "-database", "postgres://bemmanue:password@database:5432/camagru?sslmode=disable", "up" ]
     restart: on-failure
-
-  web:
-    build: .
-    container_name: web
-    depends_on:
-      - migrate
-    networks:
-      - camagru-network
-    ports:
-      - "8080:8080"
-    volumes:
-      - web:/usr/src/camagru
-    command: go run cmd/camagru/main.go
 
 volumes:
   data:
