@@ -11,30 +11,7 @@ services:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-    networks:
-      camagru-network:
-        aliases:
-          - database
     ports:
       - "5432:5432"
     volumes:
-      - data:/var/lib/postgresql/data
-
-  migrate:
-    container_name: migrate
-    depends_on:
-      - database
-    image: migrate/migrate
-    networks:
-      - camagru-network
-    volumes:
-      - ./migrations:/migrations
-    command: [ "-path", "/migrations", "-database", "postgres://bemmanue:password@database:5432/camagru?sslmode=disable", "up" ]
-    restart: on-failure
-
-volumes:
-  data:
-  web:
-
-networks:
-  camagru-network:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
